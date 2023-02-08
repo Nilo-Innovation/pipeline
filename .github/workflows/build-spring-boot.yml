@@ -53,6 +53,7 @@ jobs:
           echo "::set-env name=DOCKER_BUILD_TARGET::debug"
           echo "::set-env name=EKS_CLUSTER_NAME::dev-lineup-k8s-cluster"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
+          echo "::set-env name=ALB::${{ secrets.ALB_DEV }}"
       - name: Set PROD environment variables
         if: github.ref == 'refs/heads/prod'
         env:
@@ -62,6 +63,7 @@ jobs:
           echo "::set-env name=DOCKER_BUILD_TARGET::debug"
           echo "::set-env name=EKS_CLUSTER_NAME::prod-lineup-k8s-cluster"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
+          echo "::set-env name=ALB::${{ secrets.ALB_PROD }}"
       - name: ☕ Set up Java
         uses: actions/setup-java@v2
         with:
