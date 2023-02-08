@@ -10,6 +10,8 @@ on:
     secrets:
       AWS_DEV_ACCOUNT_ID:
         required: true
+      AWS_PROD_ACCOUNT_ID:
+        required: true
       AWS_PIPELINE_ACCESS_KEY_ID:
         required: true
       AWS_PIPELINE_SECRET_ACCESS_KEY:
