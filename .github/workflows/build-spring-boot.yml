@@ -8,7 +8,9 @@ on:
         required: true
         type: string
     secrets:
-      ALB:
+      ALB_DEV:
+        required: true
+      ALB_PROD:
         required: true
       AWS_DEV_ACCOUNT_ID:
         required: true
