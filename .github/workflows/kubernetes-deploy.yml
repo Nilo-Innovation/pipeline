@@ -10,7 +10,9 @@ on:
     secrets:
       AWS_DEV_ACCOUNT_ID:
         required: true
-      ALB:
+      ALB_DEV:
+        required: true
+      ALB_PROD:
         required: true
       DEV_KUBE_CONFIG_DATA:
         required: true
