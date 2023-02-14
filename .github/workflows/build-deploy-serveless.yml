@@ -54,6 +54,8 @@ jobs:
     name: Deploy Serveless
     needs: build
     runs-on: ubuntu-latest
+    environment: 
+      name: ${{ needs.branch.outputs.env_name }}
     strategy:
       matrix:
         node-version: [12.x]
@@ -66,8 +68,6 @@ jobs:
     - run: npm ci
     - name: serveless deploy
       uses: serverless/github-action@v3.1
-      environment: 
-        name: ${{ needs.branch.outputs.env_name }}
       with:
         args: deploy
       env:
