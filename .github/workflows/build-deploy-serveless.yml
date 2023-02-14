@@ -18,8 +18,30 @@ env:
   ORGANIZATION: lineup
 
 jobs:
+  branch:
+    name: Branch
+    runs-on: ubuntu-latest
+    steps:
+    - name: Some check on branch
+      id: branch_check
+      run: |
+        echo "Running on branch ${{ github.ref }}"
+        if [ "${{ github.ref }}" = "refs/heads/prod" ]; then
+          echo "::set-output name=env_name::Produccion"
+        elif [ "${{ github.ref }}" = "refs/heads/master" ]; then
+          echo "::set-output name=env_name::Desarrollo"
+        else
+            echo "::set-output name=env_name::Features"
+        fi         
+        
+    - name: Use variable setup in previous step
+      run: echo "I'm using variable ${{ steps.branch_check.outputs.env_name }}"
+
+    outputs:
+      env_name: ${{ steps.branch_check.outputs.env_name }}
   build:
     name: Build Gradlew
+    needs: branch
     runs-on: ubuntu-latest
     steps:
     - name: Checkout project sources
@@ -42,28 +64,10 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - run: npm ci
-    - name: Some check on branch
-      id: branch_check
-      run: |
-        echo "Running on branch ${{ github.ref }}"
-        if [ "${{ github.ref }}" = "refs/heads/prod" ]; then
-          echo "::set-output name=env_name::Produccion"
-        elif [ "${{ github.ref }}" = "refs/heads/master" ]; then
-          echo "::set-output name=env_name::Desarrollo"
-        else
-            echo "::set-output name=env_name::Features"
-        fi         
-        
-    - name: Use variable setup in previous step
-      run: echo "I'm using variable ${{ steps.branch_check.outputs.env_name }}"
-
-    outputs:
-      env_name: ${{ steps.branch_check.outputs.env_name }}
-
     - name: serveless deploy
       uses: serverless/github-action@v3.1
       environment: 
-        name: ${{ needs.build.outputs.env_name }}
+        name: ${{ needs.branch.outputs.env_name }}
       with:
         args: deploy
       env:
