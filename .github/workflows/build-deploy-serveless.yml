@@ -1,12 +1,5 @@
 on:
   workflow_call:
-    secrets:
-      AWS_ACCOUNT_ID:
-        required: true
-      AWS_ACCESS_KEY_ID:
-        required: true
-      AWS_SECRET_ACCESS_KEY:
-        required: true
 
 env:
   BUILD_SHA: ${{ github.sha }}
