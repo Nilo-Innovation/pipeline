@@ -9,10 +9,6 @@ on:
         required: true
       AWS_PIPELINE_SECRET_ACCESS_KEY:
         required: true
-      PACKAGE_USERNAME:
-        required: true
-      PACKAGE_TOKEN:
-        required: true
 
 env:
   BUILD_SHA: ${{ github.sha }}
@@ -55,7 +51,7 @@ jobs:
       run: |
         echo "Running on branch ${{ github.ref }}"
         if [ "${{ github.ref }}" = "refs/heads/prod" ]; then
-          echo "::set-output name=env_name::Production"
+          echo "::set-output name=env_name::Produccion"
         elif [ "${{ github.ref }}" = "refs/heads/master" ]; then
           echo "::set-output name=env_name::Desarrollo"
         else
