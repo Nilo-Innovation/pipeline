@@ -1,5 +1,18 @@
 on:
   workflow_call:
+    secrets:
+      AWS_DEV_ACCOUNT_ID:
+        required: true
+      AWS_PROD_ACCOUNT_ID:
+        required: true
+      AWS_PIPELINE_ACCESS_KEY_ID:
+        required: true
+      AWS_PIPELINE_SECRET_ACCESS_KEY:
+        required: true
+      TOKEN:
+        required: true
+      USERNAME:
+        required: true
 
 env:
   BUILD_SHA: ${{ github.sha }}
@@ -11,35 +24,12 @@ env:
   ORGANIZATION: lineup
   TOKEN: ${{ secrets.TOKEN }}
   USERNAME: ${{ secrets.USERNAME }}
-  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_PIPELINE_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PIPELINE_SECRET_ACCESS_KEY }}
 
 jobs:
-  branch:
-    name: Branch
-    runs-on: ubuntu-latest
-    steps:
-    - name: Some check on branch
-      id: branch_check
-      run: |
-        echo "Running on branch ${{ github.ref }}"
-        if [ "${{ github.ref }}" = "refs/heads/prod" ]; then
-          echo "::set-output name=env_name::Produccion"
-        elif [ "${{ github.ref }}" = "refs/heads/master" ]; then
-          echo "::set-output name=env_name::Desarrollo"
-        else
-            echo "::set-output name=env_name::Features"
-        fi         
-        
-    - name: Use variable setup in previous step
-      run: echo "I'm using variable ${{ steps.branch_check.outputs.env_name }}"
-
-    outputs:
-      env_name: ${{ steps.branch_check.outputs.env_name }}
   build:
     name: Build Gradlew
-    needs: branch
     runs-on: ubuntu-latest
     steps:
     - name: Checkout project sources
@@ -52,12 +42,24 @@ jobs:
     name: Deploy Serveless
     needs: build
     runs-on: ubuntu-latest
-    environment: 
-      name: ${{ needs.branch.outputs.env_name }}
     strategy:
       matrix:
         node-version: [12.x]
     steps:
+    - name: Set DEV environment variables
+      if: github.ref == 'refs/heads/master'
+      env:
+        BUCKET_REFUND: "lineup-order-refund-files"
+      run: |
+        echo "::set-env name=STAGE::dev"
+        echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
+    - name: Set PROD environment variables
+      if: github.ref == 'refs/heads/prod'
+      env:
+        BUCKET_REFUND: "prod-lineup-order-refund-files"
+      run: |
+        echo "::set-env name=STAGE::prod"
+        echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
     - uses: actions/checkout@v2
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
