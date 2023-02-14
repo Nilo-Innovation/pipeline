@@ -9,6 +9,8 @@ env:
   AWS_DEFAULT_OUTPUT: json
   AWS_DEPLOYMENT_ROLE: pipeline
   ORGANIZATION: lineup
+  TOKEN: ${{ secrets.TOKEN }}
+  USERNAME: ${{ secrets.USERNAME }}
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
