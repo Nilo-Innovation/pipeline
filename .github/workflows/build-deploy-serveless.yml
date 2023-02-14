@@ -52,13 +52,9 @@ jobs:
           echo "::set-output name=env_name::Desarrollo"
         else
             echo "::set-output name=env_name::Features"
-        fi         
-        
+        fi                
     - name: Use variable setup in previous step
       run: echo "I'm using variable ${{ steps.branch_check.outputs.env_name }}"
-
-      outputs:
-        env_name: ${{ steps.branch_check.outputs.env_name }}
     - name: serveless deploy
       uses: serverless/github-action@v3.1
       environment: 
@@ -71,4 +67,6 @@ jobs:
         AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  outputs:
+    env_name: ${{ steps.branch_check.outputs.env_name }}
           
