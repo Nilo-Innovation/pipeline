@@ -53,6 +53,8 @@ jobs:
       run: |
         echo "::set-env name=STAGE::dev"
         echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
+        echo "::set-env name=TOKEN::${{ secrets.TOKEN }}"
+        echo "::set-env name=USERNAME::${{ secrets.USERNAME }}"
     - name: Set PROD environment variables
       if: github.ref == 'refs/heads/prod'
       env:
@@ -60,6 +62,8 @@ jobs:
       run: |
         echo "::set-env name=STAGE::prod"
         echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
+        echo "::set-env name=TOKEN::${{ secrets.TOKEN }}"
+        echo "::set-env name=USERNAME::${{ secrets.USERNAME }}"
     - uses: actions/checkout@v2
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
