@@ -1,9 +1,7 @@
 on:
   workflow_call:
     secrets:
-      AWS_DEV_ACCOUNT_ID:
-        required: true
-      AWS_PROD_ACCOUNT_ID:
+      AWS_ACCOUNT_ID:
         required: true
       AWS_ACCESS_KEY_ID:
         required: true
