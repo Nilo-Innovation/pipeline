@@ -46,15 +46,7 @@ jobs:
       matrix:
         node-version: [12.x]
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - name: serveless deploy
-      uses: serverless/github-action@v3.1
-      with:
-        args: deploy
+    - name: Set DEV environment variables
       if: github.ref == 'refs/heads/master'
       env:
         BUCKET_REFUND: "lineup-order-refund-files"
@@ -72,3 +64,14 @@ jobs:
         echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
         echo "::set-env name=TOKEN::${{ secrets.TOKEN }}"
         echo "::set-env name=USERNAME::${{ secrets.USERNAME }}"
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: serveless deploy
+      uses: serverless/github-action@v3.1
+      run: 
+        echo ORGANIZATION
+      with:
+        args: deploy
