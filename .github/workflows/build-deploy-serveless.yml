@@ -45,7 +45,8 @@ jobs:
         GITHUB_USERNAME: ${{ secrets.PACKAGE_USERNAME }}
         GITHUB_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
       run: |
-        pwd
+        ../gradlew clean
+        ../gradlew build
   deploy:
     name: Build Gradlew & Deploy Serveless
     needs: build
@@ -89,5 +90,5 @@ jobs:
     - name: serverless deploy
       uses: serverless/github-action@v3.1
       with:
-        args: -c "serverless deploy"
+        args: -c "cd ../ && serverless deploy"
         entrypoint: /bin/sh
