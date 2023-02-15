@@ -86,5 +86,5 @@ jobs:
     - name: serverless deploy
       uses: serverless/github-action@v3.1
       with:
-        args: -c "cd /home/runner/work/order-refund-file-serverless/order-refund-file-serverless && serverless deploy"
+        args: -c "cd ./home/runner/work/order-refund-file-serverless/order-refund-file-serverless && serverless deploy"
         entrypoint: /bin/sh
