@@ -9,9 +9,9 @@ on:
         required: true
       AWS_PIPELINE_SECRET_ACCESS_KEY:
         required: true
-      TOKEN:
+      PACKAGE_USERNAME:
         required: true
-      USERNAME:
+      PACKAGE_TOKEN:
         required: true
 
 env:
