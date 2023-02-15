@@ -32,12 +32,21 @@ jobs:
     name: Build Gradlew
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout project sources
-      uses: actions/checkout@v2
-    - name: Setup Gradle
-      uses: gradle/gradle-build-action@v2
-    - name: Run build with Gradle Wrapper
-      run: ./gradlew build
+    - name: 🐘 Stop Gradle Daemon(s)
+      uses: eskatos/gradle-command-action@v1
+      env:
+        GRADLE_OPTS: -Xmx2000m -XX:MaxPermSize=256m -Dorg.gradle.jvmargs='-Xmx2048m -XX:MaxPermSize=256m'
+      with:
+        arguments: --stop
+        gradle-version: 7.4.2
+    - name: 🐘 Build Repository With Gradle
+      env:
+        GRADLE_OPTS: -Xmx2000m -XX:MaxPermSize=256m -Dorg.gradle.jvmargs='-Xmx2048m -XX:MaxPermSize=256m'
+        GITHUB_USERNAME: ${{ secrets.PACKAGE_USERNAME }}
+        GITHUB_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
+      run: |
+        ./gradlew clean
+        ./gradlew build
   deploy:
     name: Build Gradlew & Deploy Serveless
     needs: build
