@@ -28,19 +28,8 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PIPELINE_SECRET_ACCESS_KEY }}
 
 jobs:
-  build:
-    name: Build Gradlew
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout project sources
-      uses: actions/checkout@v2
-    - name: Setup Gradle
-      uses: gradle/gradle-build-action@v2
-    - name: Run build with Gradle Wrapper
-      run: ./gradlew build
-  deploy:
-    name: Deploy Serveless
-    needs: build
+  Build and Deploy:
+    name: Build Gradlew & Deploy Serveless
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -72,12 +61,18 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
         role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
         role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
+    - name: Checkout project sources
+      uses: actions/checkout@v2
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+    - name: Run build with Gradle Wrapper
+      run: ./gradlew build
     - uses: actions/checkout@v3
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-    - run: chown 777 -R ./
+    - run: sudo chown 777 -R ./
     - name: serverless deploy
       uses: serverless/github-action@v3.1
       with:
