@@ -77,9 +77,8 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-    - run: chown -R builder:abuild /github/workspace
     - name: serverless deploy
       uses: serverless/github-action@v3.1
       with:
-        args: -c "cd ./ && serverless deploy"
+        args: -c "serverless deploy"
         entrypoint: /bin/sh
