@@ -42,7 +42,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
       run: |
         ./gradlew clean
-        ./gradlew build
+        ./gradlew build && pwd
   deploy:
     name: Build Gradlew & Deploy Serveless
     needs: build
@@ -82,9 +82,8 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-    - run: sudo chown 777 -R ./ && ls -la
+    - run: sudo chown 777 -R ./
     - name: serverless deploy
       uses: serverless/github-action@v3.1
       with:
-        args: -c "cd ../ && serverless deploy"
-        entrypoint: /bin/sh
+        args: deploy
