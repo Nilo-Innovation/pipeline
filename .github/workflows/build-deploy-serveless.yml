@@ -36,24 +36,6 @@ jobs:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - name: Set DEV environment variables
-      if: github.ref == 'refs/heads/master'
-      env:
-        BUCKET_REFUND: "lineup-order-refund-files"
-      run: |
-        echo "::set-env name=STAGE::dev"
-        echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
-        echo "::set-env name=TOKEN::${{ secrets.TOKEN }}"
-        echo "::set-env name=USERNAME::${{ secrets.USERNAME }}"
-    - name: Set PROD environment variables
-      if: github.ref == 'refs/heads/prod'
-      env:
-        BUCKET_REFUND: "prod-lineup-order-refund-files"
-      run: |
-        echo "::set-env name=STAGE::prod"
-        echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
-        echo "::set-env name=TOKEN::${{ secrets.TOKEN }}"
-        echo "::set-env name=USERNAME::${{ secrets.USERNAME }}"
     - uses: actions/checkout@v3
     - uses: actions/setup-java@v3
       with:
@@ -76,6 +58,24 @@ jobs:
       matrix:
         node-version: [16.x]
     steps:
+    - name: Set DEV environment variables
+      if: github.ref == 'refs/heads/master'
+      env:
+        BUCKET_REFUND: "lineup-order-refund-files"
+      run: |
+        echo "::set-env name=STAGE::dev"
+        echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
+        echo "::set-env name=TOKEN::${{ secrets.TOKEN }}"
+        echo "::set-env name=USERNAME::${{ secrets.USERNAME }}"
+    - name: Set PROD environment variables
+      if: github.ref == 'refs/heads/prod'
+      env:
+        BUCKET_REFUND: "prod-lineup-order-refund-files"
+      run: |
+        echo "::set-env name=STAGE::prod"
+        echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
+        echo "::set-env name=TOKEN::${{ secrets.TOKEN }}"
+        echo "::set-env name=USERNAME::${{ secrets.USERNAME }}"
     - name: 🔑 Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
