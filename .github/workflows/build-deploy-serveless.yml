@@ -32,19 +32,6 @@ jobs:
     name: Build Gradlew and Deploy AWS
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-java@v3
-      with:
-        distribution: temurin
-        java-version: 11
-        
-    - name: Setup Gradle
-      uses: gradle/gradle-build-action@v2
-    
-    - name: Execute Gradle build
-      run: |
-        ./gradlew build
-        ls -la
     - name: Set DEV environment variables
       if: github.ref == 'refs/heads/master'
       env:
@@ -71,6 +58,19 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
         role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
         role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
+    - uses: actions/checkout@v3
+    - uses: actions/setup-java@v3
+      with:
+        distribution: temurin
+        java-version: 11
+        
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+    
+    - name: Execute Gradle build
+      run: |
+        ./gradlew build
+        ls -la
     - uses: actions/checkout@v3
     - name: Use Node.js
       uses: actions/setup-node@v3
