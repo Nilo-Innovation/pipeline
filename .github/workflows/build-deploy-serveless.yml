@@ -47,6 +47,7 @@ jobs:
         ls -la
   deploy:
     name: Deploy Serveless
+    needs: build
     runs-on: ubuntu-latest
     strategy:
       matrix:
