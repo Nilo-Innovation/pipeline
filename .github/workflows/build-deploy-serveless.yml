@@ -15,6 +15,7 @@ on:
         required: true
 
 env:
+  REPO_NAME: ${{ github.event.repository.name }}
   BUILD_SHA: ${{ github.sha }}
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
   AWS_REGION: us-east-1
@@ -37,7 +38,6 @@ jobs:
       env:
         BUCKET_REFUND: "lineup-order-refund-files"
       run: |
-        echo "REPO_NAME=${{ github.event.repository.name }}" >> $GITHUB_ENV
         echo "::set-env name=STAGE::dev"
         echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
         echo "::set-env name=TOKEN::${{ secrets.TOKEN }}"
@@ -47,7 +47,6 @@ jobs:
       env:
         BUCKET_REFUND: "prod-lineup-order-refund-files"
       run: |
-        echo "REPO_NAME=${{ github.event.repository.name }}" >> $GITHUB_ENV
         echo "::set-env name=STAGE::prod"
         echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
         echo "::set-env name=TOKEN::${{ secrets.TOKEN }}"
