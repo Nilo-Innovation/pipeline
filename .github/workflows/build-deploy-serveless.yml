@@ -15,7 +15,6 @@ on:
         required: true
 
 env:
-  REPO_NAME: ${{ github.event.repository.name }}
   BUILD_SHA: ${{ github.sha }}
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
   AWS_REGION: us-east-1
@@ -31,10 +30,10 @@ env:
 jobs:
   build:
     name: Build Gradlew
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+        node-version: [16.x]
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-java@v3
@@ -48,15 +47,6 @@ jobs:
     - name: Execute Gradle build
       run: |
         ./gradlew build
-        cd build && cd libs && ls -la && pwd
-  deploy:
-    name: Build Gradlew & Deploy Serveless
-    needs: build
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [16.x]
-    steps:
     - name: Set DEV environment variables
       if: github.ref == 'refs/heads/master'
       env:
@@ -94,5 +84,4 @@ jobs:
     - name: serverless deploy
       uses: serverless/github-action@v3.1
       with:
-        args: -c "cd ./home/runner/work/order-refund-file-serverless/order-refund-file-serverless && serverless deploy"
-        entrypoint: /bin/sh
+        args: deploy
