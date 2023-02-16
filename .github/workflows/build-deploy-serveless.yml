@@ -32,30 +32,12 @@ jobs:
     name: Build Gradlew
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout project sources
-      uses: actions/checkout@v2
-    - name: Setup Gradle
-      uses: gradle/gradle-build-action@v2
-    - name: 🐘 Build Repository With Gradle
-      env:
-        GITHUB_USERNAME: ${{ secrets.PACKAGE_USERNAME }}
-        GITHUB_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
-      run: |
-        ./gradlew clean
-        ./gradlew build && pwd
-  deploy:
-    name: Build Gradlew & Deploy Serveless
-    needs: build
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [16.x]
-    steps:
     - name: Set DEV environment variables
       if: github.ref == 'refs/heads/master'
       env:
         BUCKET_REFUND: "lineup-order-refund-files"
       run: |
+        echo "REPO_NAME=${{ github.event.repository.name }}" >> $GITHUB_ENV
         echo "::set-env name=STAGE::dev"
         echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
         echo "::set-env name=TOKEN::${{ secrets.TOKEN }}"
@@ -65,10 +47,34 @@ jobs:
       env:
         BUCKET_REFUND: "prod-lineup-order-refund-files"
       run: |
+        echo "REPO_NAME=${{ github.event.repository.name }}" >> $GITHUB_ENV
         echo "::set-env name=STAGE::prod"
         echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
         echo "::set-env name=TOKEN::${{ secrets.TOKEN }}"
         echo "::set-env name=USERNAME::${{ secrets.USERNAME }}"
+    - name: 🐘 Stop Gradle Daemon(s)
+      uses: eskatos/gradle-command-action@v1
+      env:
+        GRADLE_OPTS: -Xmx2000m -XX:MaxPermSize=256m -Dorg.gradle.jvmargs='-Xmx2048m -XX:MaxPermSize=256m'
+      with:
+        arguments: --stop
+        gradle-version: 7.4.2
+    - name: 🐘 Build Repository With Gradle
+      env:
+        GRADLE_OPTS: -Xmx2000m -XX:MaxPermSize=256m -Dorg.gradle.jvmargs='-Xmx2048m -XX:MaxPermSize=256m'
+        GITHUB_USERNAME: ${{ secrets.PACKAGE_USERNAME }}
+        GITHUB_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
+      run: |
+        ./gradlew $REPO_NAME:clean
+        ./gradlew $REPO_NAME:build
+  deploy:
+    name: Build Gradlew & Deploy Serveless
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16.x]
+    steps:
     - name: 🔑 Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
