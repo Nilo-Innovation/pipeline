@@ -31,9 +31,6 @@ jobs:
   build:
     name: Build Gradlew and Deploy AWS
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [16.x]
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-java@v3
@@ -47,7 +44,7 @@ jobs:
     - name: Execute Gradle build
       run: |
         ./gradlew build
-        cd build && cd libs && ls -la && pwd
+        ls -la
     - name: Set DEV environment variables
       if: github.ref == 'refs/heads/master'
       env:
@@ -75,11 +72,11 @@ jobs:
         role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
         role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
     - uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Use Node.js
       uses: actions/setup-node@v3
     - run: |
-        ls -la
         sudo chown 777 -R ./
+        ls -la
     - name: serverless deploy
       uses: serverless/github-action@v3.1
       with:
