@@ -48,7 +48,7 @@ jobs:
     - name: Execute Gradle build
       run: |
         ./gradlew build
-        cd build && cd libs && ls -la
+        cd build && cd libs && ls -la && pwd
   deploy:
     name: Build Gradlew & Deploy Serveless
     needs: build
@@ -92,4 +92,5 @@ jobs:
     - name: serverless deploy
       uses: serverless/github-action@v3.1
       with:
-        args: deploy
+        args: -c "cd ./home/runner/work/order-refund-file-serverless/order-refund-file-serverless && serverless deploy"
+        entrypoint: /bin/sh
