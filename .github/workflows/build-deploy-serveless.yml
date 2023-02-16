@@ -88,7 +88,9 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-    - run: sudo chown 777 -R ./
+    - run: |
+        ls -la
+        sudo chown 777 -R ./
     - name: serverless deploy
       uses: serverless/github-action@v3.1
       with:
