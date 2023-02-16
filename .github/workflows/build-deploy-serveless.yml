@@ -48,8 +48,7 @@ jobs:
     - name: Execute Gradle build
       run: |
         ./gradlew build
-        ls -la
-        pwd
+        cd build && cd libs && ls -la
   deploy:
     name: Build Gradlew & Deploy Serveless
     needs: build
