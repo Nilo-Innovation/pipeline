@@ -31,7 +31,10 @@ env:
 jobs:
   build:
     name: Build Gradlew
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
     - name: Set DEV environment variables
       if: github.ref == 'refs/heads/master'
@@ -51,22 +54,20 @@ jobs:
         echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
         echo "::set-env name=TOKEN::${{ secrets.TOKEN }}"
         echo "::set-env name=USERNAME::${{ secrets.USERNAME }}"
-    - name: 🐘 Stop Gradle Daemon(s)
-      uses: eskatos/gradle-command-action@v1
-      env:
-        GRADLE_OPTS: -Xmx2000m -XX:MaxPermSize=256m -Dorg.gradle.jvmargs='-Xmx2048m -XX:MaxPermSize=256m'
+    - uses: actions/checkout@v3
+    - uses: actions/setup-java@v3
       with:
-        arguments: --stop
-        gradle-version: 7.4.2
-    - name: 🐘 Build Repository With Gradle
-      env:
-        GRADLE_OPTS: -Xmx2000m -XX:MaxPermSize=256m -Dorg.gradle.jvmargs='-Xmx2048m -XX:MaxPermSize=256m'
-        GITHUB_USERNAME: ${{ secrets.PACKAGE_USERNAME }}
-        GITHUB_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
+        distribution: temurin
+        java-version: 11
+        
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+    
+    - name: Execute Gradle build
       run: |
-        echo $REPO_NAME
-        ./gradlew $REPO_NAME:clean
-        ./gradlew $REPO_NAME:build
+        ./gradlew build
+        ls -la
+        pwd
   deploy:
     name: Build Gradlew & Deploy Serveless
     needs: build
