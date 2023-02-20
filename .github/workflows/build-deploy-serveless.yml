@@ -46,7 +46,7 @@ jobs:
         ./gradlew build
     - uses: actions/cache@v3
       with:
-        path: ~/
+        path: ~/build
         key: gradlew
   deploy:
     name: Deploy Serveless
