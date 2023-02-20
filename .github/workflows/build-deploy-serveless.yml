@@ -44,7 +44,10 @@ jobs:
     - name: Execute Gradle build
       run: |
         ./gradlew build
-        ls -la
+    - uses: actions/cache@v3
+      with:
+        path: ~/
+        key: gradlew
   deploy:
     name: Deploy Serveless
     needs: build
@@ -53,6 +56,10 @@ jobs:
       matrix:
         node-version: [16.x]
     steps:
+    - uses: actions/cache@v3
+      with:
+        path: ~/
+        key: gradlew
     - name: Set DEV environment variables
       if: github.ref == 'refs/heads/master'
       env:
