@@ -91,9 +91,9 @@ jobs:
           ./gradlew $SERVICE_NAME:clean
           ./gradlew $SERVICE_NAME:build
           cd ${{  env.SERVICE_NAME  }} && ls -la
-      - uses: actions/cache@v3
+      - uses: actions/cache/save@v3
         with: 
-          path: ${{  env.SERVICE_NAME  }}/build/*
+          path: ${{  env.SERVICE_NAME  }}/build
           key: ${{ runner.os }}-gradlew-${{  env.SERVICE_NAME  }}
       - name: 🔑 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
