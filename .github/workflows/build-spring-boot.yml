@@ -93,7 +93,7 @@ jobs:
       - uses: actions/cache@v3
         with: 
           path: ~/build
-          key: gradlew
+          key: ${{ runner.os }}-gradlew
       - name: 🔑 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
