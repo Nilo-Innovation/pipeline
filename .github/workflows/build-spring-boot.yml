@@ -92,6 +92,7 @@ jobs:
           ./gradlew $SERVICE_NAME:build
       - name: Execute Gradle build
         run: |
+          ./gradlew clean
           ./gradlew build
       - uses: actions/cache@v3
         with: 
