@@ -90,9 +90,12 @@ jobs:
           echo 'service name ' ${{inputs.SERVICE_NAME}}
           ./gradlew $SERVICE_NAME:clean
           ./gradlew $SERVICE_NAME:build
+      - name: Execute Gradle build
+        run: |
+          ./gradlew build
       - uses: actions/cache@v3
         with: 
-          path: ~/
+          path: ~/build
           key: ${{ runner.os }}-gradlew
       - name: 🔑 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
