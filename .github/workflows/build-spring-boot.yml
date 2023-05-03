@@ -92,7 +92,7 @@ jobs:
           ./gradlew $SERVICE_NAME:build
       - uses: actions/cache@v3
         with: 
-          path: ${{  env.SERVICE_NAME  }}/build
+          path: ${{  env.SERVICE_NAME  }}
           key: ${{ runner.os }}-gradlew-${{ hashFiles('**/build.gradle.kts') }}
       - name: 🔑 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
