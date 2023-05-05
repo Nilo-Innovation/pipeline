@@ -90,7 +90,8 @@ jobs:
           echo 'service name ' ${{inputs.SERVICE_NAME}}
           ./gradlew $SERVICE_NAME:clean
           ./gradlew $SERVICE_NAME:build
-          cd ${{  env.SERVICE_NAME  }} && ls -la
+          cd ${{  env.SERVICE_NAME  }}/build && ls -la
+          cd ${{  env.SERVICE_NAME  }}/build/reports && ls -la
       - uses: actions/cache/save@v3
         with: 
           path: ${{  env.SERVICE_NAME  }}/build
