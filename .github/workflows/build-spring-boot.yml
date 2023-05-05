@@ -94,7 +94,7 @@ jobs:
       - uses: actions/cache/save@v3
         with: 
           path: ${{  env.SERVICE_NAME  }}/build
-          key: ${{ runner.os }}-gradlew-${{  env.SERVICE_NAME  }}
+          key: ${{ runner.os }}-gradlew-${{  env.SERVICE_NAME  }}-${{ runner.os }}
       - name: 🔑 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
