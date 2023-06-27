@@ -28,8 +28,8 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PIPELINE_SECRET_ACCESS_KEY }}
 
 jobs:
-  build & deploy:
-    name: Build Gradlew & Deploy AWS Serveless
+  build and deploy:
+    name: Build Gradlew and Deploy Serveless
     runs-on: ubuntu-latest
     strategy:
       matrix:
