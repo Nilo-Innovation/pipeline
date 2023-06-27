@@ -28,10 +28,13 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PIPELINE_SECRET_ACCESS_KEY }}
 
 jobs:
-  build:
-    name: Build Gradlew
+  build & deploy:
+    name: Build Gradlew & Deploy AWS Serveless
     runs-on: ubuntu-latest
     steps:
+    strategy:
+      matrix:
+        node-version: [16.x]
     - uses: actions/checkout@v3
     - uses: actions/setup-java@v3
       with:
@@ -44,22 +47,6 @@ jobs:
     - name: Execute Gradle build
       run: |
         ./gradlew build
-    - uses: actions/cache/save@v3
-      with: 
-        path: |
-          build
-        key: ${{ runner.os }}-gradlew-${{  env.SERVICE_NAME  }}-${{ github.sha }}
-    - name: List Objets
-      run: |
-        cd build/ && ls -la
-  deploy:
-    name: Deploy Serveless
-    needs: build
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [16.x]
-    steps:
     - name: Set DEV environment variables
       if: github.ref == 'refs/heads/master'
       #env:
@@ -87,15 +74,6 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Cache Restore
-      uses: actions/cache/restore@v3
-      with:
-        path: |
-          **/
-        key: ${{ runner.os }}-gradlew-${{ github.event.repository.name }}-${{ github.sha }}
-    - name: List Objets
-      run: |
-        ls -la
     - name: serverless deploy
       uses: serverless/github-action@v3.1
       with:
