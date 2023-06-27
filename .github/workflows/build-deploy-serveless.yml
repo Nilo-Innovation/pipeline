@@ -44,10 +44,10 @@ jobs:
     - name: Execute Gradle build
       run: |
         ./gradlew build
-    - uses: actions/cache@v3
-      with:
+    - uses: actions/cache/save@v3
+      with: 
         path: ~/build
-        key: gradlew
+        key: ${{ runner.os }}-gradlew-${{  env.SERVICE_NAME  }}-${{ github.sha }}
   deploy:
     name: Deploy Serveless
     needs: build
@@ -83,10 +83,11 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-    - uses: actions/cache@v3
+    - name: Cache Restore
+      uses: actions/cache/restore@v3
       with:
-        path: ~/
-        key: gradlew
+        path: ~/build
+        key: ${{ runner.os }}-gradlew-${{ github.event.repository.name }}-${{ github.sha }}
     - name: serverless deploy
       uses: serverless/github-action@v3.1
       with:
