@@ -46,7 +46,8 @@ jobs:
         ./gradlew build
     - uses: actions/cache/save@v3
       with: 
-        path: ~/build
+        path: |
+          **/build
         key: ${{ runner.os }}-gradlew-${{  env.SERVICE_NAME  }}-${{ github.sha }}
   deploy:
     name: Deploy Serveless
@@ -86,7 +87,8 @@ jobs:
     - name: Cache Restore
       uses: actions/cache/restore@v3
       with:
-        path: ~/build
+        path: |
+          **/build
         key: ${{ runner.os }}-gradlew-${{ github.event.repository.name }}-${{ github.sha }}
     - name: serverless deploy
       uses: serverless/github-action@v3.1
