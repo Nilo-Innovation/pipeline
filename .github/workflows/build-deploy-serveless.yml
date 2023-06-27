@@ -46,7 +46,7 @@ jobs:
         ./gradlew build
     - uses: actions/cache/save@v3
       with: 
-        path: build
+        path: build/libs/*
         key: ${{ runner.os }}-gradlew-${{  env.SERVICE_NAME  }}-${{ github.sha }}
     - name: List Objets
       run: |
@@ -89,7 +89,7 @@ jobs:
     - name: Cache Restore
       uses: actions/cache/restore@v3
       with:
-        path: build
+        path: build/libs/*
         key: ${{ runner.os }}-gradlew-${{ github.event.repository.name }}-${{ github.sha }}
     - name: List Objets
       run: |
