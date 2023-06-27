@@ -44,9 +44,9 @@ jobs:
     - name: Execute Gradle build
       run: |
         ./gradlew build
-    - uses: actions/cache@v3
+    - uses: actions/cache/save@v3
       with: 
-        path: build/libs/app.jar
+        path: build
         key: ${{ runner.os }}-gradlew-${{  env.SERVICE_NAME  }}-${{ github.sha }}
     - name: List Objets
       run: |
@@ -87,9 +87,9 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - name: Cache Restore
-      uses: actions/cache@v3
+      uses: actions/cache/restore@v3
       with:
-        path: build/libs/app.jar
+        path: build
         key: ${{ runner.os }}-gradlew-${{ github.event.repository.name }}-${{ github.sha }}
     - name: List Objets
       run: |
