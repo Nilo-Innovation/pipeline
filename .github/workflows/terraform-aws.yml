@@ -66,6 +66,7 @@ jobs:
         
       - name: Download file from S3
         run: |
+          aws s3 ls
           aws s3 cp s3://lineup-terraform-dev/*  ./terraform/
 
       - name: Terraform Init
