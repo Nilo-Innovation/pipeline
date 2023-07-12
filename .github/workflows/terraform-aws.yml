@@ -57,14 +57,17 @@ jobs:
           echo "::set-env name=EKS_CLUSTER_NAME::prod-lineup-k8s-cluster"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
 
-      - uses: keithweaver/aws-s3-github-action@v1.0.0
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          command: cp
-          source: s3://lineup-terraform-dev/* 
-          destination: ./terraform/
-          aws_access_key_id: ${{ env.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-          aws_region: us-east-1
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+        
+      - name: Download file from S3
+        run: |
+          aws s3 cp s3://lineup-terraform-dev/*  ./terraform/
+
       - name: Terraform Init
         uses: hashicorp/terraform-github-actions/init@v0.4.0
         env:
