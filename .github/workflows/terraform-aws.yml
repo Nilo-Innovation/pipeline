@@ -71,6 +71,13 @@ jobs:
           aws s3 ls
           aws s3 sync s3://lineup-terraform-dev  ./terraform/
 
+      - name: Set up variables
+        run: |
+          echo "AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }}" >> ./terraform/terraform.tfvars
+          echo "AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }}" >> ./terraform/terraform.tfvars
+          echo "SERVICE_NAME=${{ env.SERVICE_NAME }}" >> ./terraform/terraform.tfvars
+          echo "SERVICE_NAME=${{ env.SERVICE_NAME }}" >> ./terraform/variables.tf
+
       - name: Terraform Init
         uses: hashicorp/terraform-github-actions/init@v0.4.0
         env:
