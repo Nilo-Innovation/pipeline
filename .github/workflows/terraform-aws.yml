@@ -83,9 +83,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TF_ACTION_WORKING_DIR: 'terraform'
-          AWS_ACCESS_KEY_ID:  ${{ env.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY:  ${{ env.AWS_SECRET_ACCESS_KEY }}
-          SERVICE_NAME: ${{ env.SERVICE_NAME }}
 
       - name: Terraform Validate
         uses: hashicorp/terraform-github-actions/validate@v0.3.7
@@ -95,6 +92,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TF_ACTION_WORKING_DIR: 'terraform'
-          AWS_ACCESS_KEY_ID:  ${{ env.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY:  ${{ env.AWS_SECRET_ACCESS_KEY }}
-          SERVICE_NAME: ${{ env.SERVICE_NAME }}
