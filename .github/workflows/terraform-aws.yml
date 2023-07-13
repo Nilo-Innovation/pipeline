@@ -73,16 +73,19 @@ jobs:
 
       - name: Set up variables
         run: |
-          echo "AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }}" >> ./terraform/terraform.tfvars
-          echo "AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }}" >> ./terraform/terraform.tfvars
-          echo "SERVICE_NAME=${{ env.SERVICE_NAME }}" >> ./terraform/terraform.tfvars
-          echo "SERVICE_NAME=${{ env.SERVICE_NAME }}" >> ./terraform/variables.tf
+          sed -i "s=AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }}" ./terraform/terraform.tfvars
+          sed -i "s=AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }}" ./terraform/terraform.tfvars
+          sed -i "s=SERVICE_NAME=${{ env.SERVICE_NAME }}" ./terraform/terraform.tfvars
+          sed -i "s=SERVICE_NAME=${{ env.SERVICE_NAME }}" ./terraform/variables.tf
 
       - name: Terraform Init
         uses: hashicorp/terraform-github-actions/init@v0.4.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TF_ACTION_WORKING_DIR: 'terraform'
+          AWS_ACCESS_KEY_ID:  ${{ env.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY:  ${{ env.AWS_SECRET_ACCESS_KEY }}
+          SERVICE_NAME: ${{ env.SERVICE_NAME }}
 
       - name: Terraform Validate
         uses: hashicorp/terraform-github-actions/validate@v0.3.7
@@ -92,3 +95,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TF_ACTION_WORKING_DIR: 'terraform'
+          AWS_ACCESS_KEY_ID:  ${{ env.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY:  ${{ env.AWS_SECRET_ACCESS_KEY }}
+          SERVICE_NAME: ${{ env.SERVICE_NAME }}
