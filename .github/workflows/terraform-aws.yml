@@ -73,11 +73,8 @@ jobs:
 
       - name: Set up variables
         run: |
-          sed -i "s=SERVICE_NAME=${{ env.SERVICE_NAME }}" ./terraform.tfvars
-          sed -i "s=SERVICE_NAME=${{ env.SERVICE_NAME }}" ./variables.tf
-          mv terraform.tfvars ./terraform
-          mv variables.tf ./terraform
-          mv main.tfvars ./terraform
+          sed -i "s/SERVICE_NAME/${{ env.SERVICE_NAME }}/g" ./terraform/terraform.tfvars
+          sed -i "s/SERVICE_NAME/${{ env.SERVICE_NAME }}/g" ./terraform/variables.tf
 
       - name: Terraform Init
         uses: hashicorp/terraform-github-actions/init@v0.4.0
