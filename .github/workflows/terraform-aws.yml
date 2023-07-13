@@ -73,6 +73,7 @@ jobs:
 
       - name: Set up variables
         run: |
+          ls -la ./terraform
           sed -i "s/SERVICE_NAME/${{ env.SERVICE_NAME }}/g" ./terraform/terraform.tfvars
           sed -i "s/SERVICE_NAME/${{ env.SERVICE_NAME }}/g" ./terraform/variables.tf
 
