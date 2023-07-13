@@ -36,7 +36,7 @@ jobs:
   terraform:
     name: terraform
     runs-on: ubuntu-latest
-    if: ${{ github.ref == github.event.inputs.terraform == 'true' }}
+    if: ${{ github.ref == github.event.inputs.terraform == true }}
     steps:
       - uses: actions/checkout@v2
         with:
