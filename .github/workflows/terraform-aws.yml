@@ -66,14 +66,10 @@ jobs:
           role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
           role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
         
-      - name: Download file from S3
+      - name: Download file from S3 & Set up Variables
         run: |
           aws s3 ls
-          aws s3 sync s3://lineup-terraform-dev  ./
-
-      - name: Set up variables
-        run: |
-          ls -la ./terraform
+          aws s3 sync s3://lineup-terraform-dev  ./terraform
           sed -i "s/SERVICE_NAME/${{ env.SERVICE_NAME }}/g" ./terraform/terraform.tfvars
           sed -i "s/SERVICE_NAME/${{ env.SERVICE_NAME }}/g" ./terraform/variables.tf
 
