@@ -73,8 +73,6 @@ jobs:
 
       - name: Set up variables
         run: |
-          sed -i "s=AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }}" ./terraform.tfvars
-          sed -i "s=AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }}" ./terraform.tfvars
           sed -i "s=SERVICE_NAME=${{ env.SERVICE_NAME }}" ./terraform.tfvars
           sed -i "s=SERVICE_NAME=${{ env.SERVICE_NAME }}" ./variables.tf
           mv terraform.tfvars ./terraform
@@ -86,8 +84,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TF_ACTION_WORKING_DIR: 'terraform'
-          AWS_ACCESS_KEY_ID:  ${{ env.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY:  ${{ env.AWS_SECRET_ACCESS_KEY }}
           SERVICE_NAME: ${{ env.SERVICE_NAME }}
 
       - name: Terraform Validate
@@ -98,6 +94,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TF_ACTION_WORKING_DIR: 'terraform'
-          AWS_ACCESS_KEY_ID:  ${{ env.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY:  ${{ env.AWS_SECRET_ACCESS_KEY }}
           SERVICE_NAME: ${{ env.SERVICE_NAME }}
