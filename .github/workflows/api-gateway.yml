@@ -43,11 +43,13 @@ jobs:
         if: github.ref == 'refs/heads/master'
         run: |
           echo "::set-env name=STAGE::dev"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
           echo "::set-env name=DNS::https://dev.lineupapp.digital/${{ env.SERVICE_NAME }}/v3/api-docs/access-service"
       - name: Set PROD environment variables
         if: github.ref == 'refs/heads/prod'
         run: |
           echo "::set-env name=STAGE::prod"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
           echo "::set-env name=DNS::https://lineupapp.digital/${{ env.SERVICE_NAME }}/v3/api-docs/access-service"
       - name: Checkout code
         uses: actions/checkout@v2
