@@ -96,5 +96,6 @@ jobs:
         uses: Nilo-Innovation/eks-deploy-lineup@master
         env:
           KUBE_CONFIG_DATA: ${{ env.EKS_KUBE_CONFIG_DATA }}
+          GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN }}
         with:
           args: ${{ format('apply -f ./{0}/kubernetes.deployment.yml', env.SERVICE_NAME) }}

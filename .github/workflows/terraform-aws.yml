@@ -34,7 +34,7 @@ env:
 
 jobs:
   terraform:
-    name: terraform
+    name: Deploy Infraestructure in AWS
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.terraform == 'true' }}
     steps:
