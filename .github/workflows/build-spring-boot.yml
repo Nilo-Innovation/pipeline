@@ -123,19 +123,10 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          curl -X POST -H 'Content-type: application/json' \
-          --data '{
-            "text": "Workflow Build spring boot ${{ env.SERVICE_NAME }} failed! See details: '${{ github.workflow }}'",
-            "channel": "#github-actions"
-          }' $SLACK_WEBHOOK_URL
-
+          curl -X POST --data-urlencode "payload={\"channel\": \"#github-actions\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Build Spring Boot deploy ${{ env.SERVICE_NAME }} failed! See details: '${{ github.workflow }}'"}" $SLACK_WEBHOOK_URL
       - name: Notify Slack on Success
         if: success()
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          curl -X POST -H 'Content-type: application/json' \
-          --data '{
-            "text": "Workflow Build spring boot ${{ env.SERVICE_NAME }} succeeded! See details: '${{ github.workflow }}'",
-            "channel": "#github-actions"
-          }' $SLACK_WEBHOOK_URL
+          curl -X POST --data-urlencode "payload={\"channel\": \"#github-actions\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Build Spring Boot deploy ${{ env.SERVICE_NAME }} succeeded! See details: '${{ github.workflow }}'"}" $SLACK_WEBHOOK_URL
