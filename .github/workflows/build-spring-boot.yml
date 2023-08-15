@@ -126,7 +126,7 @@ jobs:
           curl -X POST -H 'Content-type: application/json' \
           --data '{
             "text": "Workflow Build spring boot ${{ env.SERVICE_NAME }} failed! See details: '${{ github.workflow }}'",
-            "channel": "github-actions"
+            "channel": "#github-actions"
           }' $SLACK_WEBHOOK_URL
 
       - name: Notify Slack on Success
@@ -137,5 +137,5 @@ jobs:
           curl -X POST -H 'Content-type: application/json' \
           --data '{
             "text": "Workflow Build spring boot ${{ env.SERVICE_NAME }} succeeded! See details: '${{ github.workflow }}'",
-            "channel": "github-actions"
+            "channel": "#github-actions"
           }' $SLACK_WEBHOOK_URL
