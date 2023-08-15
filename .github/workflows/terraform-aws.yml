@@ -99,8 +99,9 @@ jobs:
       - name: Notify Slack on Failure
         if: failure()
         run: |
-          curl -X POST --data-urlencode "payload={\"channel\": \"#github-actions\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Infraestructure Deploy deploy ${{ env.SERVICE_NAME }} failed! See details: '${{ github.workflow }}'"}" ${{ secrets.SLACK_WEBHOOK_URL }}
+          curl -X POST --data-urlencode "payload={\"channel\": \"#github-actions\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Infraestructure Deploy deploy ${{ env.SERVICE_NAME }} failed! See details: '${{ github.workflow }}'.\ "}" ${{ secrets.SLACK_WEBHOOK_URL }}
       - name: Notify Slack on Success
         if: success()
         run: |
-          curl -X POST --data-urlencode "payload={\"channel\": \"#github-actions\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Infraestructure Deploy deploy ${{ env.SERVICE_NAME }} succeeded! See details: '${{ github.workflow }}'"}" ${{ secrets.SLACK_WEBHOOK_URL }}
+          curl -X POST --data-urlencode "payload={\"channel\": \"#github-actions\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Infraestructure Deploy deploy '${{ env.SERVICE_NAME }}' succeeded! See details: '${{ github.workflow }}'.\ "}" ${{ secrets.SLACK_WEBHOOK_URL }}
+          curl -X POST --data-urlencode "payload={\"channel\": \"#github-actions\", \"username\": \"webhookbot\", \"text\": \"Esto se publica en #github-actions y procede de un robot llamado webhookbot.\"}" https://hooks.slack.com/services/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
