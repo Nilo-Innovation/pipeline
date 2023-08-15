@@ -113,3 +113,29 @@ jobs:
           ECR_TARGET: ${{ format('{0}.dkr.ecr.us-east-1.amazonaws.com/{1}-{2}/{3}:latest',env.AWS_ACCOUNT_ID, env.STAGE, env.ORGANIZATION, env.SERVICE_NAME ) }}
         run: |
           docker buildx build --platform linux/amd64 -t $ECR_TARGET --push $SERVICE_NAME
+  notify_slack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Notify Slack on Failure
+        if: failure()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{
+            "text": "Workflow Build spring boot ${{ env.SERVICE_NAME }} failed! See details: '${{ github.workflow }}'",
+            "channel": "github-actions"
+          }' $SLACK_WEBHOOK_URL
+
+      - name: Notify Slack on Success
+        if: success()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{
+            "text": "Workflow Build spring boot ${{ env.SERVICE_NAME }} succeeded! See details: '${{ github.workflow }}'",
+            "channel": "github-actions"
+          }' $SLACK_WEBHOOK_URL

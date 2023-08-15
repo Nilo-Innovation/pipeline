@@ -69,3 +69,29 @@ jobs:
           aws apigateway import-rest-api --fail-on-warnings --body "file:apigateway/swagger.json"
           API_ID=$(aws apigateway get-rest-apis --query "items[?name=='${{ env.SERVICE_NAME }}'].id" --output text)
           aws apigateway create-deployment --rest-api-id "$API_ID" --stage-name "${{ env.STAGE }}"
+  notify_slack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Notify Slack on Failure
+        if: failure()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{
+            "text": "Workflow API-Gateway deploy ${{ env.SERVICE_NAME }} failed! See details: '${{ github.workflow }}'",
+            "channel": "github-actions"
+          }' $SLACK_WEBHOOK_URL
+
+      - name: Notify Slack on Success
+        if: success()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{
+            "text": "Workflow API-Gateway deploy ${{ env.SERVICE_NAME }} succeeded! See details: '${{ github.workflow }}'",
+            "channel": "github-actions"
+          }' $SLACK_WEBHOOK_URL
