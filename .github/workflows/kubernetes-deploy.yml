@@ -101,6 +101,7 @@ jobs:
           args: ${{ format('apply -f ./{0}/kubernetes.deployment.yml', env.SERVICE_NAME) }}
   notify_slack:
     runs-on: ubuntu-latest
+    needs: deploy_services
     steps:
       - name: Checkout code
         uses: actions/checkout@v2

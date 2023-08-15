@@ -71,6 +71,7 @@ jobs:
           aws apigateway create-deployment --rest-api-id "$API_ID" --stage-name "${{ env.STAGE }}"
   notify_slack:
     runs-on: ubuntu-latest
+    needs: apigateway
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
