@@ -74,8 +74,8 @@ jobs:
       - name: Notify Slack on Failure
         if: failure()
         run: |
-          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow API-Gateway Deploy ${{ env.SERVICE_NAME }} failed! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\", \"icon_emoji\": \":x:\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow API-Gateway Deploy ${{ env.SERVICE_NAME }} failed! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
       - name: Notify Slack on Success
         if: success()
         run: |
-          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow API-Gateway Deploy ${{ env.SERVICE_NAME }} succeeded! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\", \"icon_emoji\": \":marca_de_verificación_blanca:\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow API-Gateway Deploy ${{ env.SERVICE_NAME }} succeeded! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
