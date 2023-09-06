@@ -50,7 +50,7 @@ jobs:
         key: ${{ runner.os }}-gradlew-${{ github.event.repository.name }}-${{ github.sha }}
     - name: List Objets
       run: |
-        ls -la 
+        cd /build/libs && ls -la  
   deploy:
     name: Deploy Serveless
     needs: build
@@ -93,7 +93,7 @@ jobs:
         key: ${{ runner.os }}-gradlew-${{ github.event.repository.name }}-${{ github.sha }}
     - name: List Objets
       run: |
-        ls -la
+        cd /build/libs && ls -la 
     - name: serverless deploy
       uses: serverless/github-action@v3.1
       with:
