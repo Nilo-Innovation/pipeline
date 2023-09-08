@@ -93,7 +93,7 @@ jobs:
         key: ${{ runner.os }}-gradlew-${{ github.event.repository.name }}-${{ github.sha }}
     - name: List Objets
       run: |
-        ls -la build/libs
+        ls -la build/
     - name: serverless deploy
       uses: serverless/github-action@v3.1
       with:
