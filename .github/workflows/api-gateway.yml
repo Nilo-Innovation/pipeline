@@ -58,7 +58,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Download Swagger YAML
         run: |
-          cd apigateway && curl -o swagger.json ${{ env.DNS }} && sed 's/"\*\/\*"/"application\/json"/g' swagger.json > swagger-new.json && jq 'del(.components.securitySchemes)' swagger-new.json > swagger-apigateway.json
+          cd apigateway && curl -o swagger.json ${{ env.DNS }} && sed 's/"\*\/\*"/"application\/json"/g' swagger.json > swagger-new.json && jq 'del(.components.securitySchemes)' swagger-new.json > swagger-apigateway.json && rm -rf swagger.json && base64 -i swagger-apigateway.json > swagger.json
       - name: 🔑 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -69,7 +69,7 @@ jobs:
           role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
       - name: API Gateway
         run: |
-          aws apigateway import-rest-api --fail-on-warnings --body "file:apigateway/swagger-apigateway.json"
+          aws apigateway import-rest-api --parameters endpointConfigurationTypes=REGIONAL --body 'file://apigateway/swagger.json'
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Notify Slack on Failure
