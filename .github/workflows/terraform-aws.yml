@@ -4,6 +4,9 @@ on:
       SERVICE_NAME:
         required: true
         type: string
+      PATH_SERVICE:
+        required: true
+        type: string
     secrets:
       AWS_DEV_ACCOUNT_ID:
         required: true

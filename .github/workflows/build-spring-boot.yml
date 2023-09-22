@@ -7,6 +7,9 @@ on:
       SERVICE_PORT:
         required: true
         type: string
+      PATH_SERVICE:
+        required: true
+        type: string
     secrets:
       ALB_DEV:
         required: true
