@@ -32,6 +32,7 @@ env:
   AWS_DEPLOYMENT_ROLE: pipeline
   ORGANIZATION: lineup
   SERVICE_NAME: ${{inputs.SERVICE_NAME}}
+  PATH_SERVICE: ${{inputs.PATH_SERVICE}}
 
 jobs:
   apigateway:
