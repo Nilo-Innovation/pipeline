@@ -48,12 +48,14 @@ jobs:
           echo "::set-env name=STAGE::dev"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
           echo "::set-env name=DNS::https://dev.lineupapp.digital/${{ env.PATH_SERVICE }}/v3/api-docs/${{ env.SERVICE_NAME }}"
+          echo "::set-env name=API_ID::$(aws apigateway get-rest-apis --query "items[?name=='$SERVICE_NAME API']" | jq -r '.[0].id')"
       - name: Set PROD environment variables
         if: github.ref == 'refs/heads/prod'
         run: |
           echo "::set-env name=STAGE::prod"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
           echo "::set-env name=DNS::https://lineupapp.digital/${{ env.PATH_SERVICE }}/v3/api-docs/${{ env.SERVICE_NAME }}"
+          echo "::set-env name=API_ID::$(aws apigateway get-rest-apis --query "items[?name=='${{  env.SERVICE_NAME  }} API']" | jq -r '.[0].id')"
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Download Swagger YAML
@@ -69,9 +71,7 @@ jobs:
           role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
       - name: API Gateway
         run: |
-          ls -la
-          cat apigateway/swagger.json
-          aws apigateway put-rest-api --rest-api-id $(aws apigateway get-rest-apis --query "items[?name=='$SERVICE_NAME API']" | jq -r '.[0].id') --mode merge --body file://apigateway/swagger.json
+          aws apigateway put-rest-api --rest-api-id ${{  env.API_ID  }} --mode merge --body file://apigateway/swagger.json
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Notify Slack on Failure
