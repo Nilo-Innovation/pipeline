@@ -76,12 +76,12 @@ jobs:
           echo "::set-env name=API_ID::$(aws apigateway get-rest-apis --query "items[?name=='${{  env.SERVICE_NAME  }} API']" | jq -r '.[0].id')"
       - name: Download Swagger YAML
         run: |
-          cd apigateway && curl -o swagger.json ${{ env.DNS }} && sed 's/"\*\/\*"/"application\/json"/g' swagger.json > swagger-new.json && jq 'del(.components.securitySchemes)' swagger-new.json > swagger-apigateway.json && rm -rf swagger.json && base64 -i swagger-apigateway.json > swagger.json
+          curl -o swagger.json ${{ env.DNS }} && sed 's/"\*\/\*"/"application\/json"/g' swagger.json > swagger-new.json && jq 'del(.components.securitySchemes)' swagger-new.json > swagger-apigateway.json && rm -rf swagger.json && base64 -i swagger-apigateway.json > swagger.json
       - name: API Gateway
         run: |
           ls -la apigateway
           cat apigateway/swagger.json
-          aws apigateway put-rest-api --rest-api-id ${{  env.API_ID  }} --mode merge --body file://apigateway/swagger.json
+          aws apigateway put-rest-api --rest-api-id ${{  env.API_ID  }} --mode merge --body file://swagger.json
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Notify Slack on Failure
