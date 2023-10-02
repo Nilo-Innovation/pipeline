@@ -83,10 +83,10 @@ jobs:
           aws apigateway put-rest-api --rest-api-id ${{  env.API_ID  }} --mode merge --fail-on-warnings --body file://apigateway/swagger-api.json
       - name: Inject integration API Gateway
         run: |
-          aws s3 sync s3://lineup-terraform-dev/api-integrations.sh  ./apigateway
-          sed -i "s/SERVICE_NAME/${{ env.SERVICE_NAME }}/g" ./apigateway/api-integrations.sh
-          sed -i "s/PATH_SERVICE/${{ env.PATH_SERVICE }}/g" ./apigateway/api-integrations.sh
-          sh apigateway/api-integrations.sh
+          aws s3 sync s3://lineup-terraform-dev/add-integrations.sh  ./apigateway
+          sed -i "s/SERVICE_NAME/${{ env.SERVICE_NAME }}/g" ./apigateway/add-integrations.sh
+          sed -i "s/PATH_SERVICE/${{ env.PATH_SERVICE }}/g" ./apigateway/add-integrations.sh
+          sh apigateway/add-integrations.sh
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Notify Slack on Failure
