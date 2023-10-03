@@ -84,6 +84,7 @@ jobs:
       - name: Inject integration API Gateway
         run: |
           aws s3 sync s3://lineup-terraform-dev  ./apigateway
+          cat apigateway/add-integrations.sh
           sed -i "s/SERVICE_NAME/${{  env.SERVICE_NAME  }}/g" ./apigateway/add-integrations.sh
           sed -i "s/PATH_SERVICE/${{  env.PATH_SERVICE  }}/g" ./apigateway/add-integrations.sh
           sh apigateway/add-integrations.sh
