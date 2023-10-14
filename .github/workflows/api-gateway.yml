@@ -89,12 +89,12 @@ jobs:
       - name: Inject method response API Gateway
         run: |
           aws s3 sync s3://lineup-terraform-dev  ./apigateway
-          chmod +x apigateway/add-integrations.sh
+          chmod +x apigateway/add-methodresponse.sh
           ./apigateway/add-methodresponse.sh
       - name: Inject integration response API Gateway
         run: |
           aws s3 sync s3://lineup-terraform-dev  ./apigateway
-          chmod +x apigateway/add-integrations.sh
+          chmod +x apigateway/add-integrationresponse.sh
           ./apigateway/add-integrationresponse.sh
       - name: Checkout code
         uses: actions/checkout@v2
