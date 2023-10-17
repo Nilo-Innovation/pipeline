@@ -86,11 +86,6 @@ jobs:
           aws s3 sync s3://lineup-terraform-dev  ./apigateway
           chmod +x apigateway/add-integrations.sh
           ./apigateway/add-integrations.sh
-      - name: Inject header in integration API Gateway
-        run: |
-          aws s3 sync s3://lineup-terraform-dev  ./apigateway
-          chmod +x apigateway/add-headersintegration.sh
-          ./apigateway/add-integrations.sh
       - name: Inject method response API Gateway
         run: |
           aws s3 sync s3://lineup-terraform-dev  ./apigateway
