@@ -76,13 +76,13 @@ jobs:
       - name: Create or Update state machine
         if: steps.check-state-machine.outputs.state_exists == 'false'
         run: |
-          echo "Creando el estado xp-accumulation-system..."
-          aws stepfunctions create-state-machine --name "xp-accumulation-system" --definition file://config/state-machine.json --role-arn arn:aws:iam::123456789012:role/YourExecutionRole
-          echo "Estado xp-accumulation-system creado exitosamente."
-        else
-          echo "Actualizando el estado xp-accumulation-system..."
-          aws stepfunctions update-state-machine --state-machine-arn "{{  env.STATE_MACHINE  }}" --definition file://config/state-machine.json
-          echo "Estado xp-accumulation-system actualizado exitosamente."
+            echo "Creando el estado xp-accumulation-system..."
+            aws stepfunctions create-state-machine --name "xp-accumulation-system" --definition file://config/state-machine.json --role-arn arn:aws:iam::123456789012:role/YourExecutionRole
+            echo "Estado xp-accumulation-system creado exitosamente."
+          else
+            echo "Actualizando el estado xp-accumulation-system..."
+            aws stepfunctions update-state-machine --state-machine-arn "{{  env.STATE_MACHINE  }}" --definition file://config/state-machine.json
+            echo "Estado xp-accumulation-system actualizado exitosamente."
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Notify Slack on Failure
