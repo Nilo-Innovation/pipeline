@@ -1,0 +1,95 @@
+on:
+  workflow_call:
+    secrets:
+      AWS_DEV_ACCOUNT_ID:
+        required: true
+      AWS_PROD_ACCOUNT_ID:
+        required: true
+      AWS_PIPELINE_ACCESS_KEY_ID:
+        required: true
+      AWS_PIPELINE_SECRET_ACCESS_KEY:
+        required: true
+      PACKAGE_USERNAME:
+        required: true
+      PACKAGE_TOKEN:
+        required: true
+      ARN_STATE_MACHINE_DEV:
+        required: false
+      ARN_STATE_MACHINE_PROD:
+        required: false
+
+env:
+  BUILD_SHA: ${{ github.sha }}
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_PIPELINE_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PIPELINE_SECRET_ACCESS_KEY }}
+  AWS_REGION: us-east-1
+  ROLE_DURATION_SECONDS: 10800
+  AWS_DEFAULT_OUTPUT: json
+  AWS_DEPLOYMENT_ROLE: pipeline
+  ORGANIZATION: lineup
+
+jobs:
+  statemachine:
+    name: Create or Upload State Machine AWS
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.statemachine == 'true' }}
+    env:
+      ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set DEV environment variables
+        if: github.ref == 'refs/heads/master'
+        run: |
+          echo "::set-env name=STAGE::dev"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
+          echo "::set-env name=STATE_MACHINE::${{ secrets.ARN_STATE_MACHINE_DEV }}"
+      - name: Set PROD environment variables
+        if: github.ref == 'refs/heads/prod'
+        run: |
+          echo "::set-env name=STAGE::prod"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
+          echo "::set-env name=STATE_MACHINE::${{ secrets.ARN_STATE_MACHINE_PROD }}"
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: 🔑 Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
+          role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
+      - name: Check state machine its OK
+        id: check-state-machine
+        run: |
+          state_machine_name="xp-accumulation-system"
+          existing_state_machine_arn=$(aws stepfunctions list-state-machines --query "stateMachines[?name=='$state_machine_name'].stateMachineArn" --output text)
+          echo "Existing State Machine ARN: {{  env.STATE_MACHINE  }}"
+          if [ -z "{{  env.STATE_MACHINE  }}" ]; then
+            echo "State Machine does not exist"
+            echo "::set-output name=state_exists::false"
+          else
+            echo "State Machine exists"
+            echo "::set-output name=state_exists::true"
+          fi
+      - name: Create or Update state machine
+        if: steps.check-state-machine.outputs.state_exists == 'false'
+        run: |
+          echo "Creando el estado xp-accumulation-system..."
+          aws stepfunctions create-state-machine --name "xp-accumulation-system" --definition file://config/state-machine.json --role-arn arn:aws:iam::123456789012:role/YourExecutionRole
+          echo "Estado xp-accumulation-system creado exitosamente."
+        else
+          echo "Actualizando el estado xp-accumulation-system..."
+          aws stepfunctions update-state-machine --state-machine-arn "{{  env.STATE_MACHINE  }}" --definition file://config/state-machine.json
+          echo "Estado xp-accumulation-system actualizado exitosamente."
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Notify Slack on Failure
+        if: failure()
+        run: |
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow API-Gateway Deploy ${{ env.SERVICE_NAME }} failed! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Notify Slack on Success
+        if: success()
+        run: |
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow API-Gateway Deploy ${{ env.SERVICE_NAME }} succeeded! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
