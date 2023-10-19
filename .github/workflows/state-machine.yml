@@ -77,6 +77,9 @@ jobs:
       - name: Create or Update state machine
         if: steps.check-state-machine.outputs.state_exists == 'false'
         run: |
+          state_machine_name="xp-accumulation-system"
+          existing_state_machine_arn=$(aws stepfunctions list-state-machines --query "stateMachines[?name=='$state_machine_name'].stateMachineArn" --output text)
+          echo "Existing State Machine ARN: $existing_state_machine_arn"
             echo "Creando el estado xp-accumulation-system..."
             aws stepfunctions create-state-machine --name "xp-accumulation-system" --definition file://config/state-machine.json --role-arn arn:aws:iam::123456789012:role/YourExecutionRole
             echo "Estado xp-accumulation-system creado exitosamente."
