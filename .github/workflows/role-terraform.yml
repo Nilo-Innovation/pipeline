@@ -103,7 +103,7 @@ jobs:
           name: main.tf
           path: terraform
         
-      - name: Read mainf.tf
+      - name: Read main.tf
         run: cat terraform/main.tf
 
       - name: Terraform Init
