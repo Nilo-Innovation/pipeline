@@ -63,6 +63,43 @@ jobs:
           name: main.tf
           path: terraform
 
+jobs:
+  policykinesis:
+    name: Insert Policy S3 Role in AWS
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.policykinesis == 'true' }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set DEV environment variables
+        if: github.ref == 'refs/heads/master'
+        run: |
+          echo "::set-env name=STAGE::dev"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
+
+      - name: Set PROD environment variables
+        if: github.ref == 'refs/heads/prod'
+        run: |
+          echo "::set-env name=STAGE::prod"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
+      - name: Insert S3 to Role
+        run: |
+          echo 's3_txt=$(cat s3.txt)' >> $GITHUB_ENV
+          echo "$s3_txt" >> terraform/main.tf
+
+      - name: Download main.tf
+        uses: actions/download-artifact@v2
+        with:
+          name: main.tf
+          path: terraform
+
+      - name: Upload main.tf
+        uses: actions/upload-artifact@v2
+        with:
+          name: main.tf
+          path: terraform
+
   check-policy:
     runs-on: ubuntu-latest
     needs: [policys3]
