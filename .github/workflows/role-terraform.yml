@@ -54,7 +54,8 @@ jobs:
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
       - name: Insert S3 to Role
         run: |
-          echo s3.txt >> terraform/main.tf
+          echo 's3_txt=$(cat s3.txt)' >> $GITHUB_ENV
+          echo "$s3_txt" >> terraform/main.tf
 
       - name: Upload main.tf
         uses: actions/upload-artifact@v2
