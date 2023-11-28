@@ -53,11 +53,11 @@ jobs:
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
       - name: Download main.tf
         uses: actions/download-artifact@v2
+        if: failure()
         with:
           name: main.tf
           path: terraform
       - name: Insert S3 to Role
-        if: failure()
         run: |
           cat s3.txt>> terraform/main.tf
           cat terraform/main.tf
@@ -87,11 +87,11 @@ jobs:
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
       - name: Download main.tf
         uses: actions/download-artifact@v2
+        if: failure()
         with:
           name: main.tf
           path: terraform
       - name: Insert Kinesis to Role
-        if: failure()
         run: |
           cat kinesis.txt >> terraform/main.tf
           cat terraform/main.tf
