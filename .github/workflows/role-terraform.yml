@@ -128,23 +128,18 @@ jobs:
           echo "::set-env name=STAGE::prod"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
 
+      - name: Download main.tf
+        uses: actions/download-artifact@v2
+        with:
+          name: main.tf
+          path: terraform
+
       - name: Set up Policy in file main.tf
         run: |
           sed -i "s/AWS_ACCESS_KEY_ID/${{ env.AWS_ACCESS_KEY_ID }}/g" ./terraform/terraform.tfvars
           sed -i "s/AWS_SECRET_ACCESS_KEY/${{ env.AWS_SECRET_ACCESS_KEY }}/g" ./terraform/terraform.tfvars
           sed -i "s/LAMBDA_NAME/${{ env.LAMBDA_NAME }}/g" ./terraform/terraform.tfvars
           sed -i "s/LAMBDA_NAME/${{ env.LAMBDA_NAME }}/g" ./terraform/variables.tf
-          cat terraform/variables.tf
-          cat terraform/terraform.tfvars
-
-      - name: Download main.tf
-        uses: actions/download-artifact@v2
-        with:
-          name: main.tf
-          path: terraform
-        
-      - name: Read main.tf
-        run: cat terraform/main.tf
 
       - name: Terraform Init
         uses: hashicorp/terraform-github-actions/init@v0.4.0
