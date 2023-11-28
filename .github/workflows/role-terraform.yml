@@ -46,7 +46,6 @@ jobs:
         run: |
           echo "::set-env name=STAGE::dev"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
-
       - name: Set PROD environment variables
         if: github.ref == 'refs/heads/prod'
         run: |
@@ -54,16 +53,15 @@ jobs:
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
       - name: Insert S3 to Role
         run: |
-          echo 's3_txt=$(cat s3.txt)' >> $GITHUB_ENV
-          echo "$s3_txt" >> terraform/main.tf
-
+          cat s3.txt
+          echo "$(cat s3.txt)" >> terraform/main.tf
+          cat terraform/main.tf
       - name: Upload main.tf
         uses: actions/upload-artifact@v2
         with:
           name: main.tf
           path: terraform
 
-jobs:
   policykinesis:
     name: Insert Policy S3 Role in AWS
     runs-on: ubuntu-latest
@@ -77,24 +75,21 @@ jobs:
         run: |
           echo "::set-env name=STAGE::dev"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
-
       - name: Set PROD environment variables
         if: github.ref == 'refs/heads/prod'
         run: |
           echo "::set-env name=STAGE::prod"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
-      - name: Insert S3 to Role
+      - name: Insert Kinesis to Role
         run: |
-          cat s3.txt
-          echo "$(cat s3.txt)" >> terraform/main.tf
+          cat kinesis.txt
+          echo "$(cat kinesis.txt)" >> terraform/main.tf
           cat terraform/main.tf
-
       - name: Download main.tf
         uses: actions/download-artifact@v2
         with:
           name: main.tf
           path: terraform
-
       - name: Upload main.tf
         uses: actions/upload-artifact@v2
         with:
