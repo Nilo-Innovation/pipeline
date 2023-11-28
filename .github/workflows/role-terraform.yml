@@ -166,5 +166,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TF_ACTION_WORKING_DIR: 'terraform'
           LAMBDA_NAME: ${{ env.LAMBDA_NAME }}
-      - name: Checkout code
-        uses: actions/checkout@v2
