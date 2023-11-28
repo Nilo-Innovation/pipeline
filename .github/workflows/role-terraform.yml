@@ -51,10 +51,14 @@ jobs:
         run: |
           echo "::set-env name=STAGE::prod"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
+      - name: Download main.tf
+        uses: actions/download-artifact@v2
+        with:
+          name: main.tf
+          path: terraform
       - name: Insert S3 to Role
         run: |
-          cat s3.txt
-          echo "$(cat s3.txt)" >> terraform/main.tf
+          cat s3.txt>> terraform/main.tf
           cat terraform/main.tf
       - name: Upload main.tf
         uses: actions/upload-artifact@v2
@@ -63,7 +67,7 @@ jobs:
           path: terraform
 
   policykinesis:
-    name: Insert Policy S3 Role in AWS
+    name: Insert Policy Kinesis Role in AWS
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.policykinesis == 'true' }}
     steps:
@@ -80,16 +84,15 @@ jobs:
         run: |
           echo "::set-env name=STAGE::prod"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
-      - name: Insert Kinesis to Role
-        run: |
-          cat kinesis.txt
-          echo "$(cat kinesis.txt)" >> terraform/main.tf
-          cat terraform/main.tf
       - name: Download main.tf
         uses: actions/download-artifact@v2
         with:
           name: main.tf
           path: terraform
+      - name: Insert Kinesis to Role
+        run: |
+          cat kinesis.txt >> terraform/main.tf
+          cat terraform/main.tf
       - name: Upload main.tf
         uses: actions/upload-artifact@v2
         with:
