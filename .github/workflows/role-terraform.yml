@@ -134,8 +134,8 @@ jobs:
           sed -i "s/AWS_SECRET_ACCESS_KEY/${{ env.AWS_SECRET_ACCESS_KEY }}/g" ./terraform/terraform.tfvars
           sed -i "s/LAMBDA_NAME/${{ env.LAMBDA_NAME }}/g" ./terraform/terraform.tfvars
           sed -i "s/LAMBDA_NAME/${{ env.LAMBDA_NAME }}/g" ./terraform/variables.tf
-          echo terraform/variables.tf
-          echo terraform/terraform.tfvars
+          cat terraform/variables.tf
+          cat terraform/terraform.tfvars
 
       - name: Download main.tf
         uses: actions/download-artifact@v2
