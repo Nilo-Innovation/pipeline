@@ -57,6 +57,7 @@ jobs:
           name: main.tf
           path: terraform
       - name: Insert S3 to Role
+        if: failure()
         run: |
           cat s3.txt>> terraform/main.tf
           cat terraform/main.tf
@@ -90,6 +91,7 @@ jobs:
           name: main.tf
           path: terraform
       - name: Insert Kinesis to Role
+        if: failure()
         run: |
           cat kinesis.txt >> terraform/main.tf
           cat terraform/main.tf
