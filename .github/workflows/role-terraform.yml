@@ -67,10 +67,10 @@ jobs:
           name: main.tf
           path: terraform
 
-  policykinesis:
-    name: Insert Policy Kinesis Role in AWS
+  policylambda:
+    name: Insert Policy Lambda Role in AWS
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.policykinesis == 'true' }}
+    if: ${{ github.event.inputs.policylambda == 'true' }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -91,9 +91,43 @@ jobs:
         with:
           name: main.tf
           path: terraform
-      - name: Insert Kinesis to Role
+      - name: Insert Lambda to Role
         run: |
-          cat kinesis.txt >> terraform/main.tf
+          cat lambda.txt >> terraform/main.tf
+          cat terraform/main.tf
+      - name: Upload main.tf
+        uses: actions/upload-artifact@v2
+        with:
+          name: main.tf
+          path: terraform
+
+  policystate:
+    name: Insert Policy State Role in AWS
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.policystate == 'true' }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set DEV environment variables
+        if: github.ref == 'refs/heads/master'
+        run: |
+          echo "::set-env name=STAGE::dev"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
+      - name: Set PROD environment variables
+        if: github.ref == 'refs/heads/prod'
+        run: |
+          echo "::set-env name=STAGE::prod"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
+      - name: Download main.tf
+        uses: actions/download-artifact@v2
+        if: failure()
+        with:
+          name: main.tf
+          path: terraform
+      - name: Insert Lambda to Role
+        run: |
+          cat state.txt >> terraform/main.tf
           cat terraform/main.tf
       - name: Upload main.tf
         uses: actions/upload-artifact@v2
