@@ -131,12 +131,6 @@ jobs:
           echo "::set-env name=STAGE::prod"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
 
-      - name: Download main.tf
-        uses: actions/download-artifact@v2
-        with:
-          name: main.tf
-          path: terraform
-
       - name: 🔑 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
