@@ -1,0 +1,171 @@
+on:
+  workflow_call:
+    inputs:
+      LAMBDA_NAME:
+        required: true
+        type: string
+    secrets:
+      AWS_DEV_ACCOUNT_ID:
+        required: true
+      AWS_PROD_ACCOUNT_ID:
+        required: true
+      AWS_PIPELINE_ACCESS_KEY_ID:
+        required: true
+      AWS_PIPELINE_SECRET_ACCESS_KEY:
+        required: true
+      PACKAGE_USERNAME:
+        required: true
+      PACKAGE_TOKEN:
+        required: true
+
+env:
+  BUILD_SHA: ${{ github.sha }}
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_PIPELINE_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PIPELINE_SECRET_ACCESS_KEY }}
+  AWS_REGION: us-east-1
+  ROLE_DURATION_SECONDS: 1200
+  AWS_DEFAULT_OUTPUT: json
+  AWS_DEPLOYMENT_ROLE: pipeline
+  ORGANIZATION: lineup
+  LAMBDA_NAME: ${{inputs.LAMBDA_NAME}}
+  
+
+
+jobs:
+  policys3:
+    name: Insert Policy S3 Role in AWS
+    runs-on: ubuntu-latest
+    if: always () && ${{ github.event.inputs.policys3 == 'true' }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set DEV environment variables
+        if: github.ref == 'refs/heads/master'
+        run: |
+          echo "::set-env name=STAGE::dev"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
+      - name: Set PROD environment variables
+        if: github.ref == 'refs/heads/prod'
+        run: |
+          echo "::set-env name=STAGE::prod"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
+      - name: Insert S3 to Role
+        run: |
+          cat s3.txt>> terraform/main.tf
+          cat terraform/main.tf
+
+  policylambda:
+    name: Insert Policy Lambda Role in AWS
+    runs-on: ubuntu-latest
+    needs: [policys3]
+    if: always () && ${{ github.event.inputs.policylambda == 'true' }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set DEV environment variables
+        if: github.ref == 'refs/heads/master'
+        run: |
+          echo "::set-env name=STAGE::dev"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
+      - name: Set PROD environment variables
+        if: github.ref == 'refs/heads/prod'
+        run: |
+          echo "::set-env name=STAGE::prod"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
+      - name: Insert Lambda to Role
+        run: |
+          cat lambda.txt >> terraform/main.tf
+          cat terraform/main.tf
+
+  policystate:
+    name: Insert Policy State Role in AWS
+    runs-on: ubuntu-latest
+    needs: [policylambda]
+    if: always() ${{ github.event.inputs.policystate == 'true' }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set DEV environment variables
+        if: github.ref == 'refs/heads/master'
+        run: |
+          echo "::set-env name=STAGE::dev"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
+      - name: Set PROD environment variables
+        if: github.ref == 'refs/heads/prod'
+        run: |
+          echo "::set-env name=STAGE::prod"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
+      - name: Insert Lambda to Role
+        run: |
+          cat state.txt >> terraform/main.tf
+          cat terraform/main.tf
+
+  check-policy:
+    runs-on: ubuntu-latest
+    needs: [policystate]
+    steps:
+      - name: Check Policy
+        run: echo "Check Policy"
+
+  role:
+    name: Deploy Role in AWS
+    runs-on: ubuntu-latest
+    needs: [check-policy]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set DEV environment variables
+        if: github.ref == 'refs/heads/master'
+        run: |
+          echo "::set-env name=STAGE::dev"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
+
+      - name: Set PROD environment variables
+        if: github.ref == 'refs/heads/prod'
+        run: |
+          echo "::set-env name=STAGE::prod"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
+
+      - name: Download main.tf
+        uses: actions/download-artifact@v2
+        with:
+          name: main.tf
+          path: terraform
+
+      - name: 🔑 Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
+          role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
+
+      - name: Set up Policy in file main.tf
+        run: |
+          sed -i "s/AWS_ACCESS_KEY_ID/${{ env.AWS_ACCESS_KEY_ID }}/g" ./terraform/terraform.tfvars
+          sed -i "s/AWS_SECRET_ACCESS_KEY/${{ env.AWS_SECRET_ACCESS_KEY }}/g" ./terraform/terraform.tfvars
+          sed -i "s/LAMBDA_NAME/${{ env.LAMBDA_NAME }}/g" ./terraform/terraform.tfvars
+          sed -i "s/LAMBDA_NAME/${{ env.LAMBDA_NAME }}/g" ./terraform/variables.tf
+
+      - name: Terraform Init
+        uses: hashicorp/terraform-github-actions/init@v0.4.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TF_ACTION_WORKING_DIR: 'terraform'
+          LAMBDA_NAME: ${{ env.LAMBDA_NAME }}
+
+      - name: Terraform Validate
+        uses: hashicorp/terraform-github-actions/validate@v0.3.7
+
+      - name: Terraform Apply
+        uses: hashicorp/terraform-github-actions/apply@v0.4.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TF_ACTION_WORKING_DIR: 'terraform'
+          LAMBDA_NAME: ${{ env.LAMBDA_NAME }}
