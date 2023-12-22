@@ -92,9 +92,9 @@ jobs:
           echo $SERVICE_NAME
           echo 'service name ' ${{inputs.SERVICE_NAME}}
           ./gradlew $SERVICE_NAME:clean
-          ./gradlew $SERVICE_NAME:build
           ./gradlew downloadNewrelic
           ./gradlew unzipNewrelic
+          ./gradlew $SERVICE_NAME:build
       - uses: actions/cache/save@v3
         with: 
           path: ${{  env.SERVICE_NAME  }}/build
