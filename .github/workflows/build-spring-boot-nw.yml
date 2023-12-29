@@ -93,8 +93,8 @@ jobs:
           echo 'service name ' ${{inputs.SERVICE_NAME}}
           ./gradlew $SERVICE_NAME:clean
           ./gradlew $SERVICE_NAME:build
-          ./gradlew downloadNewrelic
-          ./gradlew unzipNewrelic
+          cd $SERVICE_NAME && curl -O https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-java.zip && unzip newrelic-java.zip
+          ls -la $SERVICE_NAME
       - uses: actions/cache/save@v3
         with: 
           path: ${{  env.SERVICE_NAME  }}/build
