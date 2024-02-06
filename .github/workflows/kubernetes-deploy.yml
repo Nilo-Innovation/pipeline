@@ -31,6 +31,8 @@ on:
         required: true
       PACKAGE_TOKEN:
         required: true
+      NEWRELIC:
+        required: true
 
 env:
   BUILD_SHA: ${{ github.sha }}
@@ -44,6 +46,7 @@ env:
   ORGANIZATION: lineup
   SERVICE_NAME: ${{inputs.SERVICE_NAME}}
   SERVICE_PORT: ${{inputs.SERVICE_PORT}}
+  NEWRELIC: ${{ secrets.NEWRELIC }}
 
 jobs:
   deploy_services:

@@ -27,7 +27,8 @@ on:
         required: true
       PACKAGE_TOKEN:
         required: true
-
+      NEWRELIC:
+        required: true
 env:
   BUILD_SHA: ${{ github.sha }}
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
@@ -40,6 +41,7 @@ env:
   ORGANIZATION: lineup
   SERVICE_NAME: ${{inputs.SERVICE_NAME}}
   SERVICE_PORT: ${{inputs.SERVICE_PORT}}
+  NEWRELIC: ${{ secrets.NEWRELIC }}
   
 
 
@@ -61,6 +63,7 @@ jobs:
           echo "::set-env name=EKS_CLUSTER_NAME::dev-lineup-k8s-cluster"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
           echo "::set-env name=ALB::${{ secrets.ALB_DEV }}"
+          echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
       - name: Set PROD environment variables
         if: github.ref == 'refs/heads/prod'
         env:
@@ -71,6 +74,7 @@ jobs:
           echo "::set-env name=EKS_CLUSTER_NAME::prod-lineup-k8s-cluster"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
           echo "::set-env name=ALB::${{ secrets.ALB_PROD }}"
+          echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
       - name: ☕ Set up Java
         uses: actions/setup-java@v2
         with:
