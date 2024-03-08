@@ -81,17 +81,17 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
         role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
         role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
-    - name: Cache Restore
-      uses: actions/cache@v3
-      with:
-        path: build
-        key: ${{ runner.os }}-gradlew-${{ github.event.repository.name }}-${{ github.sha }}
     - uses: actions/checkout@v3
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
     - run: npm ci
+    - name: Cache Restore
+      uses: actions/cache@v3
+      with:
+        path: build
+        key: ${{ runner.os }}-gradlew-${{ github.event.repository.name }}-${{ github.sha }}
     - name: List Objets
       run: |
         ls -la build/
