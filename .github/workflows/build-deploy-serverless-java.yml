@@ -37,7 +37,6 @@ jobs:
       with:
         distribution: temurin
         java-version: 11
-        
     - name: Setup Gradle
       uses: gradle/gradle-build-action@v2
     
@@ -57,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18.x]
+        node-version: [14.x]
     steps:
     - name: Set DEV environment variables
       if: github.ref == 'refs/heads/master'
@@ -95,6 +94,6 @@ jobs:
       run: |
         ls -la build/
     - name: serverless deploy
-      uses: serverless/github-action@v3.2
+      uses: serverless/github-action@v3.1
       with:
-        args: deploy -s ${{ env.STAGE }}
+        args: deploy -s ${{ env.STAGE }} --force
