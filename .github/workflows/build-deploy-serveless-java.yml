@@ -94,6 +94,6 @@ jobs:
       run: |
         ls -la build/
     - name: serverless deploy
-      uses: serverless/github-action@v3.1
+      uses: Nilo-Innovation/serverless-deploy-lineup@master
       with:
         args: deploy -s ${{ env.STAGE }} --force
