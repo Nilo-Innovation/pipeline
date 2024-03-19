@@ -92,7 +92,7 @@ jobs:
         key: ${{ runner.os }}-gradlew-${{ github.event.repository.name }}-${{ github.sha }}
     - name: List Objets
       run: |
-        ls -la build/
+        ls -la build/libs
     - name: serverless deploy
       uses: Nilo-Innovation/serverless-deploy-lineup@master
       with:
