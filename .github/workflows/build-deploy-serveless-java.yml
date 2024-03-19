@@ -49,7 +49,7 @@ jobs:
         key: ${{ runner.os }}-gradlew-${{ github.event.repository.name }}-${{ github.sha }}
     - name: List Objets
       run: |
-        ls -la build/ 
+        ls -la build/libs
   deploy:
     name: Deploy Serveless
     needs: build
