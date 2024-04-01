@@ -45,7 +45,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set DEV environment variables
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/dev'
         run: |
           echo "::set-env name=STAGE::dev"
           echo "::set-env name=DOCKER_BUILD_TARGET::debug"

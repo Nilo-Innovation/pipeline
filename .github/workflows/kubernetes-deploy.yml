@@ -57,7 +57,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set DEV environment variables
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/dev'
         env:
           JAVA_OPTS: "-Xmx300m -Xms250m -XX:MaxMetaspaceSize=200m -XX:MetaspaceSize=130m -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps  -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=1m -Xloggc:/var/log/containers/gc-%t.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/var/log/containers"
         run: |
@@ -100,7 +100,7 @@ jobs:
           FLUENT_BIT_IMAGE: ${{ format('{0}/lineup-fluent-bit:latest', steps.login-ecr-aws.outputs.registry) }}
           IMAGE_TAG: ${{ format('{0}/{1}-{2}/{3}:latest', steps.login-ecr-aws.outputs.registry, env.STAGE, env.ORGANIZATION, env.SERVICE_NAME ) }}
       - name: 🏢 Deploy application load balancer to EKS
-        uses: Nilo-Innovation/eks-deploy-lineup@master
+        uses: Nilo-Innovation/eks-deploy-lineup@dev
         env:
           KUBE_CONFIG_DATA: ${{ env.EKS_KUBE_CONFIG_DATA }}
           GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN }}

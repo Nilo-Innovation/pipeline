@@ -59,7 +59,7 @@ jobs:
         node-version: [14.x]
     steps:
     - name: Set DEV environment variables
-      if: github.ref == 'refs/heads/master'
+      if: github.ref == 'refs/heads/dev'
       #env:
         #Agregar variables DEV
       run: |
@@ -94,6 +94,6 @@ jobs:
       run: |
         ls -la build/libs
     - name: serverless deploy
-      uses: Nilo-Innovation/serverless-deploy-lineup@master
+      uses: Nilo-Innovation/serverless-deploy-lineup@dev
       with:
         args: deploy -s ${{ env.STAGE }} --force
