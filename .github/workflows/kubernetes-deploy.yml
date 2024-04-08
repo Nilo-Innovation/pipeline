@@ -78,6 +78,7 @@ jobs:
           echo "::set-env name=EKS_CLUSTER_NAME::prod-lineup-k8s-cluster"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
           echo "::set-env name=EKS_KUBE_CONFIG_DATA::${{ secrets.PROD_KUBE_CONFIG_DATA }}"
+          echo "::set-env name=ALB::${{ secrets.ALB_PROD }}"
           echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
       - name: 🔑 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
