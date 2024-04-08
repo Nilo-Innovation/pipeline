@@ -94,8 +94,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TF_ACTION_WORKING_DIR: 'terraform'
           SERVICE_NAME: ${{ env.SERVICE_NAME }}
-      - name: Checkout code
-        uses: actions/checkout@v2
       - name: Notify Slack on Failure
         if: failure()
         run: |
