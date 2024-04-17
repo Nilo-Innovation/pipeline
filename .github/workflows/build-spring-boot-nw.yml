@@ -104,6 +104,7 @@ jobs:
           path: ${{  env.SERVICE_NAME  }}/build
           key: ${{ runner.os }}-gradlew-${{  env.SERVICE_NAME  }}-${{ github.sha }}
       - name: 🔑 Configure AWS Credentials
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
@@ -112,9 +113,11 @@ jobs:
           role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
           role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
       - name: 🔓 Login to Amazon ECR
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
       - name: 🏗️ Build, Tag, and Push Images to Amazon ECR
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
         env:
           IMAGE_TAG: latest
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -123,6 +126,7 @@ jobs:
         run: |
           docker buildx build --platform linux/amd64 -t $ECR_TARGET --push $SERVICE_NAME
       - name: Checkout code
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
         uses: actions/checkout@v2
       - name: Notify Slack on Failure
         if: failure()

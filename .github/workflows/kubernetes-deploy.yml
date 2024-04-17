@@ -81,6 +81,7 @@ jobs:
           echo "::set-env name=ALB::${{ secrets.ALB_PROD }}"
           echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
       - name: 🔑 Configure AWS Credentials
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
@@ -89,9 +90,11 @@ jobs:
           role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
           role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
       - name: 🔓 Login to Amazon ECR
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
         id: login-ecr-aws
         uses: aws-actions/amazon-ecr-login@v1
       - name: 📄 Inject environment variables into kubernetes manifest
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
         uses: nowactions/envsubst@v1
         with:
           input: ${{ format('./{0}/kubernetes.yml', env.SERVICE_NAME) }}
@@ -101,6 +104,7 @@ jobs:
           FLUENT_BIT_IMAGE: ${{ format('{0}/lineup-fluent-bit:latest', steps.login-ecr-aws.outputs.registry) }}
           IMAGE_TAG: ${{ format('{0}/{1}-{2}/{3}:latest', steps.login-ecr-aws.outputs.registry, env.STAGE, env.ORGANIZATION, env.SERVICE_NAME ) }}
       - name: 🏢 Deploy application load balancer to EKS
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
         uses: Nilo-Innovation/eks-deploy-lineup@master
         env:
           KUBE_CONFIG_DATA: ${{ env.EKS_KUBE_CONFIG_DATA }}
@@ -108,6 +112,7 @@ jobs:
         with:
           args: ${{ format('apply -f ./{0}/kubernetes.deployment.yml', env.SERVICE_NAME) }}
       - name: Checkout code
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
         uses: actions/checkout@v2
       - name: Notify Slack on Failure
         if: failure()
