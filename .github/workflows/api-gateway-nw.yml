@@ -80,7 +80,7 @@ jobs:
           cd apigateway && curl -o swagger.json ${{ env.DNS }} && sed 's/"\*\/\*"/"application\/json"/g' swagger.json > swagger-new.json && jq 'del(.components.securitySchemes)' swagger-new.json > swagger-apigateway.json
       - name: Inject integration API Gateway
         run: |
-          aws s3 sync s3://lineup-terraform-dev/apigateway  ./apigateway
+          aws s3 sync s3://lineup-terraform-${{  env.STAGE  }}/apigateway  ./apigateway
           chmod +x apigateway/apigateway.py
           python apigateway.py && base64 -i swagger_updated.json > swagger-api.json
       - name: API Gateway
