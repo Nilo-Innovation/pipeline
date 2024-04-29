@@ -49,14 +49,14 @@ jobs:
           echo "::set-env name=STAGE::dev"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
           echo "::set-env name=DNS::https://dev.lineupapp.digital/${{ env.PATH_SERVICE }}/v3/api-docs/${{ env.SERVICE_NAME }}"
-          echo "::set-env name=API_ID::$(aws apigateway get-rest-apis --query "items[?name=='$SERVICE_NAME API']" | jq -r '.[0].id')"
+          echo "::set-env name=API_ID::$(aws apigateway get-rest-apis --query "items[?name=='$SERVICE_NAME ${{  env.STAGE  }} API']" | jq -r '.[0].id')"
       - name: Set PROD environment variables
         if: github.ref == 'refs/heads/prod'
         run: |
           echo "::set-env name=STAGE::prod"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
           echo "::set-env name=DNS::https://prod.lineupapp.digital/${{ env.PATH_SERVICE }}/v3/api-docs/${{ env.SERVICE_NAME }}"
-          echo "::set-env name=API_ID::$(aws apigateway get-rest-apis --query "items[?name=='${{  env.SERVICE_NAME  }} API']" | jq -r '.[0].id')"
+          echo "::set-env name=API_ID::$(aws apigateway get-rest-apis --query "items[?name=='${{  env.SERVICE_NAME  }} ${{  env.STAGE  }} API']" | jq -r '.[0].id')"
       - name: Checkout code
         uses: actions/checkout@v2
       - name: 🔑 Configure AWS Credentials
@@ -71,11 +71,11 @@ jobs:
       - name: Set DEV environment variables  to API GATEWAY
         if: github.ref == 'refs/heads/dev'
         run: |
-          echo "::set-env name=API_ID::$(aws apigateway get-rest-apis --query "items[?name=='$SERVICE_NAME API']" | jq -r '.[0].id')"
+          echo "::set-env name=API_ID::$(aws apigateway get-rest-apis --query "items[?name=='$SERVICE_NAME ${{  env.STAGE  }} API']" | jq -r '.[0].id')"
       - name: Set PROD environment variables to API GATEWAY
         if: github.ref == 'refs/heads/prod'
         run: |
-          echo "::set-env name=API_ID::$(aws apigateway get-rest-apis --query "items[?name=='${{  env.SERVICE_NAME  }} API']" | jq -r '.[0].id')"
+          echo "::set-env name=API_ID::$(aws apigateway get-rest-apis --query "items[?name=='${{  env.SERVICE_NAME  }} ${{  env.STAGE  }} API']" | jq -r '.[0].id')"
       - name: Download Swagger YAML
         run: |
           cd apigateway && curl -o swagger.json ${{ env.DNS }} && sed 's/"\*\/\*"/"application\/json"/g' swagger.json > swagger-new.json && jq 'del(.components.securitySchemes)' swagger-new.json > swagger-apigateway.json
