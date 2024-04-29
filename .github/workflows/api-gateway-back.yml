@@ -27,7 +27,7 @@ env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_PIPELINE_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PIPELINE_SECRET_ACCESS_KEY }}
   AWS_REGION: us-east-1
-  ROLE_DURATION_SECONDS: 2400
+  ROLE_DURATION_SECONDS: 10800
   AWS_DEFAULT_OUTPUT: json
   AWS_DEPLOYMENT_ROLE: pipeline
   ORGANIZATION: lineup
@@ -55,12 +55,11 @@ jobs:
         run: |
           echo "::set-env name=STAGE::prod"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
-          echo "::set-env name=DNS::https://prod.lineupapp.digital/${{ env.PATH_SERVICE }}/v3/api-docs/${{ env.SERVICE_NAME }}"
+          echo "::set-env name=DNS::https://lineupapp.digital/${{ env.PATH_SERVICE }}/v3/api-docs/${{ env.SERVICE_NAME }}"
           echo "::set-env name=API_ID::$(aws apigateway get-rest-apis --query "items[?name=='${{  env.SERVICE_NAME  }} API']" | jq -r '.[0].id')"
       - name: Checkout code
         uses: actions/checkout@v2
       - name: 🔑 Configure AWS Credentials
-        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
@@ -78,15 +77,25 @@ jobs:
           echo "::set-env name=API_ID::$(aws apigateway get-rest-apis --query "items[?name=='${{  env.SERVICE_NAME  }} API']" | jq -r '.[0].id')"
       - name: Download Swagger YAML
         run: |
-          cd apigateway && curl -o swagger.json ${{ env.DNS }} && sed 's/"\*\/\*"/"application\/json"/g' swagger.json > swagger-new.json && jq 'del(.components.securitySchemes)' swagger-new.json > swagger-apigateway.json
-      - name: Inject integration API Gateway
-        run: |
-          aws s3 sync s3://lineup-terraform-${{  env.STAGE  }}/apigateway  ./apigateway
-          chmod +x apigateway/apigateway.py
-          python apigateway.py && base64 -i swagger_updated.json > swagger-api.json
+          cd apigateway && curl -o swagger.json ${{ env.DNS }} && sed 's/"\*\/\*"/"application\/json"/g' swagger.json > swagger-new.json && jq 'del(.components.securitySchemes)' swagger-new.json > swagger-apigateway.json && base64 -i swagger-apigateway.json > swagger-api.json
       - name: API Gateway
         run: |
           aws apigateway put-rest-api --rest-api-id ${{  env.API_ID  }} --mode merge --fail-on-warnings --body file://apigateway/swagger-api.json
+      - name: Inject integration API Gateway
+        run: |
+          aws s3 sync s3://lineup-terraform-dev  ./apigateway
+          chmod +x apigateway/add-integrations.sh
+          ./apigateway/add-integrations.sh
+      - name: Inject method response API Gateway
+        run: |
+          aws s3 sync s3://lineup-terraform-dev  ./apigateway
+          chmod +x apigateway/add-methodresponse.sh
+          ./apigateway/add-methodresponse.sh
+      - name: Inject integration response API Gateway
+        run: |
+          aws s3 sync s3://lineup-terraform-dev  ./apigateway
+          chmod +x apigateway/add-integrationresponse.sh
+          ./apigateway/add-integrationresponse.sh
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Notify Slack on Failure
