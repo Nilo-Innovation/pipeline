@@ -83,7 +83,7 @@ jobs:
         run: |
           aws s3 sync s3://lineup-terraform-${{  env.STAGE  }}/apigateway  ./apigateway
           chmod +x apigateway/apigateway.py
-          python apigateway.py && base64 -i swagger_updated.json > swagger-api.json
+          python apigateway/apigateway.py && base64 -i swagger_updated.json > swagger-api.json
       - name: API Gateway
         run: |
           aws apigateway put-rest-api --rest-api-id ${{  env.API_ID  }} --mode merge --fail-on-warnings --body file://apigateway/swagger-api.json
