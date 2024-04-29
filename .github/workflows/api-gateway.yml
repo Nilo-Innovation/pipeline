@@ -85,6 +85,23 @@ jobs:
           chmod +x apigateway/apigateway.py
           python apigateway/apigateway.py
           cd apigateway && base64 -i swagger_updated.json > swagger-api.json
+      - name: 🔑 Configure AWS Credentials
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
+          role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
+      - name: Set DEV environment variables  to API GATEWAY
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          echo "::set-env name=API_ID::$(aws apigateway get-rest-apis --query "items[?name=='$SERVICE_NAME ${{  env.STAGE  }} API']" | jq -r '.[0].id')"
+      - name: Set PROD environment variables to API GATEWAY
+        if: github.ref == 'refs/heads/prod'
+        run: |
+          echo "::set-env name=API_ID::$(aws apigateway get-rest-apis --query "items[?name=='${{  env.SERVICE_NAME  }} ${{  env.STAGE  }} API']" | jq -r '.[0].id')"
       - name: API Gateway
         run: |
           aws apigateway put-rest-api --rest-api-id ${{  env.API_ID  }} --mode merge --fail-on-warnings --body file://apigateway/swagger-api.json
