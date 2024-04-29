@@ -87,7 +87,7 @@ jobs:
           cd apigateway && base64 -i swagger_updated.json > swagger-api.json
       - name: API Gateway
         run: |
-          aws apigateway put-rest-api --rest-api-id ${{  env.API_ID  }} --mode overwrite --ignore-warnings --body file://apigateway/swagger-api.json
+          aws apigateway put-rest-api --rest-api-id ${{  env.API_ID  }} --mode overwrite --no-fail-on-warnings --body file://apigateway/swagger-api.json
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Notify Slack on Failure
