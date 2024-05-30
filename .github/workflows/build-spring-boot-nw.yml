@@ -48,7 +48,6 @@ env:
 jobs:
   build:
     name: Build Docker Images
-    #runs-on: [self-hosted, prod]
     steps:
       - uses: actions/checkout@v2
         with:
