@@ -51,6 +51,7 @@ env:
 jobs:
   deploy_services:
     name: Deploy micro-service to EKS
+    #runs-on: [self-hosted, prod]
     runs-on: ubuntu-latest
     env:
       ACTIONS_ALLOW_UNSECURE_COMMANDS: true
