@@ -23,18 +23,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: ☕ Set up Java
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'adopt'
-          java-version: 11
-      - name: 🐘 Stop Gradle Daemon(s)
-        uses: eskatos/gradle-command-action@v1
-        env:
-          GRADLE_OPTS: -Xmx2000m -XX:MaxPermSize=256m -Dorg.gradle.jvmargs='-Xmx2048m -XX:MaxPermSize=256m'
-        with:
-          arguments: --stop
-          gradle-version: 7.4.2
+#      - name: ☕ Set up Java
+#        uses: actions/setup-java@v2
+#        with:
+#          distribution: 'adopt'
+#          java-version: 11
+#      - name: 🐘 Stop Gradle Daemon(s)
+#        uses: eskatos/gradle-command-action@v1
+#        env:
+#          GRADLE_OPTS: -Xmx2000m -XX:MaxPermSize=256m -Dorg.gradle.jvmargs='-Xmx2048m -XX:MaxPermSize=256m'
+#        with:
+#          arguments: --stop
+#          gradle-version: 7.4.2
       - name: Obtener la versión más reciente del paquete
         run: |
           VERSION=$(curl -L \
