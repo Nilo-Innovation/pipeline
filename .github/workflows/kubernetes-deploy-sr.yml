@@ -94,24 +94,51 @@ jobs:
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
         id: login-ecr-aws
         uses: aws-actions/amazon-ecr-login@v1
-      - name: 📄 Inject environment variables into kubernetes manifest
+      - name: 📄 Inject environment variables into Kubernetes manifest
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
-        uses: nowactions/envsubst@v1
-        with:
-          input: ${{ format('./{0}/kubernetes.yml', env.SERVICE_NAME) }}
-          output: ${{ format('./{0}/kubernetes.deployment.yml', env.SERVICE_NAME) }}
+        run: |
+          mkdir -p $(dirname ./${{ env.SERVICE_NAME }}/kubernetes.deployment.yml)
+          envsubst < ./${{ env.SERVICE_NAME }}/kubernetes.yml > ./${{ env.SERVICE_NAME }}/kubernetes.deployment.yml
         env:
+          SERVICE_NAME: ${{ env.SERVICE_NAME }}
           LOGROTATE_IMAGE: ${{ format('{0}/lineup-logrotate:latest', steps.login-ecr-aws.outputs.registry) }}
           FLUENT_BIT_IMAGE: ${{ format('{0}/lineup-fluent-bit:latest', steps.login-ecr-aws.outputs.registry) }}
-          IMAGE_TAG: ${{ format('{0}/{1}-{2}/{3}:latest', steps.login-ecr-aws.outputs.registry, env.STAGE, env.ORGANIZATION, env.SERVICE_NAME ) }}
+          IMAGE_TAG: ${{ format('{0}/{1}-{2}/{3}:latest', steps.login-ecr-aws.outputs.registry, env.STAGE, env.ORGANIZATION, env.SERVICE_NAME) }}
       - name: 🏢 Deploy application load balancer to EKS
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
-        uses: Nilo-Innovation/eks-deploy-lineup@master
+        run: |
+          # Establecer el KUBECONFIG
+          echo "$KUBE_CONFIG_DATA" | base64 -d > /tmp/config
+          export KUBECONFIG=/tmp/config
+
+          # Instalar kubectl
+          if [ -z ${KUBECTL_VERSION+x} ]; then
+            echo "Using default kubectl version: $(kubectl version --client --short)"
+          else
+            echo "Installing kubectl version $KUBECTL_VERSION"
+            curl -sL -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBECTL_VERSION/bin/linux/amd64/kubectl && \
+              chmod +x /usr/bin/kubectl
+            echo "Using kubectl version: $(kubectl version --client --short)"
+          fi
+
+          # Instalar aws-iam-authenticator
+          if [ -z ${IAM_VERSION+x} ]; then
+            echo "Using default aws-iam-authenticator version: $(aws-iam-authenticator version)"
+          else
+            echo "Installing aws-iam-authenticator version $IAM_VERSION"
+            curl -sL -o /usr/bin/aws-iam-authenticator https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v$IAM_VERSION/aws-iam-authenticator_$IAM_VERSION_linux_amd64 && \
+              chmod +x /usr/bin/aws-iam-authenticator
+            echo "Using aws-iam-authenticator version: $(aws-iam-authenticator version)"
+          fi
+
+          # Ejecutar comando de kubectl
+          kubectl apply -f ./${{ env.SERVICE_NAME }}/kubernetes.deployment.yml
         env:
           KUBE_CONFIG_DATA: ${{ env.EKS_KUBE_CONFIG_DATA }}
           GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN }}
-        with:
-          args: ${{ format('apply -f ./{0}/kubernetes.deployment.yml', env.SERVICE_NAME) }}
+          KUBECTL_VERSION: ${{ env.KUBECTL_VERSION }}
+          IAM_VERSION: ${{ env.IAM_VERSION }}
+          RUN_COMMAND: ${{ env.RUN_COMMAND }}
       - name: Checkout code
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
         uses: actions/checkout@v2
