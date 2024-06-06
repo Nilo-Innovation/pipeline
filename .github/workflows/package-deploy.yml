@@ -9,6 +9,9 @@ env:
   BUILD_SHA: ${{ github.sha }}
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
   SERVICE_NAME: ${{inputs.SERVICE_NAME}}
+  PACKAGE_NAME: "com.lineup.${{inputs.SERVICE_NAME}}"
+  PACKAGE_TYPE: "maven"
+  ORG: "Nilo-Innovation"
 
 jobs:
   obtener-version:
@@ -25,10 +28,6 @@ jobs:
             "https://api.github.com/orgs/${{  env.ORG  }}/packages/${{  env.PACKAGE_TYPE  }}/${{  env.PACKAGE_NAME  }}/versions" | jq -r '.[0].name')
           echo "La versión más reciente es: $VERSION"
           echo "${{  env.PACKAGE_VERSION  }}=$VERSION" >> $GITHUB_ENV
-        env:
-          ORG: "Nilo-Innovation"
-          PACKAGE_TYPE: "maven"
-          PACKAGE_NAME: "com.lineup.${{  env.SERVICE_NAME  }}"
 
       - name: Usar la versión del paquete
         run: |
