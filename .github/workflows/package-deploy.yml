@@ -1,0 +1,35 @@
+on:
+  workflow_call:
+    inputs:
+      SERVICE_NAME:
+        required: true
+        type: string
+
+env:
+  BUILD_SHA: ${{ github.sha }}
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+  SERVICE_NAME: ${{inputs.SERVICE_NAME}}
+
+jobs:
+  obtener-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Obtener la versión más reciente del paquete
+        run: |
+          VERSION=$(curl -L \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/orgs/${{  env.ORG  }}/packages/${{  env.PACKAGE_TYPE  }}/${{  env.PACKAGE_NAME  }}/versions" | jq -r '.[0].name')
+          echo "La versión más reciente es: $VERSION"
+          echo "${{  env.PACKAGE_VERSION  }}=$VERSION" >> $GITHUB_ENV
+        env:
+          ORG: "Nilo-Innovation"
+          PACKAGE_TYPE: "maven"
+          PACKAGE_NAME: "com.lineup.${{  env.SERVICE_NAME  }}"
+
+      - name: Usar la versión del paquete
+        run: |
+          echo "Usando la versión del paquete: $PACKAGE_VERSION"
