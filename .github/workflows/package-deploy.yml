@@ -48,8 +48,19 @@ jobs:
           echo "Versión en build.gradle.kts: $G_VERSION"
           echo "$gradle_version=$G_VERSION"
           gradle_version=$(echo "$GRADLE_VERSION" | xargs | tr -d '\n') >> $GITHUB_ENV
-
-      - name: Comparar versiones
+      - name: ☕ Set up Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: 11
+      - name: 🐘 Stop Gradle Daemon(s)
+        uses: eskatos/gradle-command-action@v1
+        env:
+          GRADLE_OPTS: -Xmx2000m -XX:MaxPermSize=256m -Dorg.gradle.jvmargs='-Xmx2048m -XX:MaxPermSize=256m'
+        with:
+          arguments: --stop
+          gradle-version: 7.4.2
+      - name: Comparar versiones y publicar artefacto
         run: |
           if [ "$PACKAGE_VERSION" != "$GRADLE_VERSION" ]; then
             echo "Las versiones no coinciden. Desencadenando acción..."
