@@ -90,10 +90,6 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
           role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
-      - name: 🔓 Login to Amazon ECR
-        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
-        id: login-ecr-aws
-        uses: aws-actions/amazon-ecr-login@v1
       - name: 📄 Inject environment variables into Kubernetes manifest
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
         run: |
