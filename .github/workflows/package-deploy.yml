@@ -41,7 +41,7 @@ jobs:
       - name: Leer versión de build.gradle.kts
         id: gradle_version
         run: |
-          GRADLE_VERSION=$(grep 'version =' /${{ env.SERVICE_NAME }}-api/build.gradle.kts | sed "s/version = //g" | tr -d '"' | tr -d ',')
+          GRADLE_VERSION=$(grep 'version =' ./${{ env.SERVICE_NAME }}-api/build.gradle.kts | sed "s/version = //g" | tr -d '"' | tr -d ',')
           echo "Versión en build.gradle.kts: $GRADLE_VERSION"
           echo "gradle_version=$GRADLE_VERSION" >> $GITHUB_ENV
 
