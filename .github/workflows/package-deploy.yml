@@ -33,7 +33,8 @@ jobs:
                 "https://api.github.com/orgs/${{ env.ORG }}/packages/${{ env.PACKAGE_TYPE }}/${{ env.PACKAGE_NAME }}/versions" | jq -r '.[0].name' | xargs)
           GIT_VERSION=$(echo "$VERSION" | sed 's/-RELEASE//')
           echo "La versión reciente del paquete es: $GIT_VERSION"
-          echo "PACKAGE_VERSION=$GIT_VERSION" >> $GITHUB_ENV
+          PACKAGE_VERSION=$(echo "$PACKAGE_VERSION" | xargs | tr -d '\n')
+          echo "$PACKAGE_VERSION=$GIT_VERSION" >> $GITHUB_ENV
   
       - name: Usar la versión del paquete
         run: |
@@ -45,7 +46,8 @@ jobs:
           GRADLE_VERSION=$(grep 'version =' ./${{ env.SERVICE_NAME }}-api/build.gradle.kts | sed "s/version = //g" | tr -d '"' | tr -d ',' | xargs)
           G_VERSION=$(echo "$GRADLE_VERSION" | sed 's/-RELEASE//')
           echo "Versión en build.gradle.kts: $G_VERSION"
-          echo "gradle_version=$G_VERSION" >> $GITHUB_ENV
+          gradle_version=$(echo "$GRADLE_VERSION" | xargs | tr -d '\n')
+          echo "$gradle_version=$G_VERSION" >> $GITHUB_ENV
 
       - name: Comparar versiones
         run: |
