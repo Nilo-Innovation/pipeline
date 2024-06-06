@@ -16,7 +16,6 @@ env:
   PACKAGE_NAME: "com.lineup.${{inputs.SERVICE_NAME}}"
   PACKAGE_TYPE: "maven"
   ORG: "Nilo-Innovation"
-  TOKEN: ${{secret.TOKEN}}
 
 jobs:
   obtener-version:
