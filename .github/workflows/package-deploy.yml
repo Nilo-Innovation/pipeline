@@ -33,6 +33,23 @@ jobs:
                 "https://api.github.com/orgs/${{ env.ORG }}/packages/${{ env.PACKAGE_TYPE }}/${{ env.PACKAGE_NAME }}/versions" | jq -r '.[0].name')
           echo "La versión más reciente es: $VERSION"
           echo "PACKAGE_VERSION=$VERSION" >> $GITHUB_ENV
+  
       - name: Usar la versión del paquete
         run: |
           echo "Usando la versión del paquete: $PACKAGE_VERSION"
+
+      - name: Leer versión de build.gradle.kts
+        id: gradle_version
+        run: |
+          GRADLE_VERSION=$(grep 'version =' /${{ env.SERVICE_NAME }}-api/build.gradle.kts | sed "s/version = //g" | tr -d '"' | tr -d ',')
+          echo "Versión en build.gradle.kts: $GRADLE_VERSION"
+          echo "gradle_version=$GRADLE_VERSION" >> $GITHUB_ENV
+
+      - name: Comparar versiones
+        run: |
+          if [ "$PACKAGE_VERSION" != "$GRADLE_VERSION" ]; then
+            echo "Las versiones no coinciden. Desencadenando acción..."
+            # Aquí puedes desencadenar la acción que necesitas
+          else
+            echo "Las versiones coinciden. No se requiere acción."
+          fi
