@@ -53,7 +53,7 @@ jobs:
         run: |
           if [ "$PACKAGE_VERSION" != "$GRADLE_VERSION" ]; then
             echo "Las versiones no coinciden. Desencadenando acción..."
-            # Aquí puedes desencadenar la acción que necesitas
+            ./gradlew publish
           else
             echo "Las versiones coinciden. No se requiere acción."
           fi
