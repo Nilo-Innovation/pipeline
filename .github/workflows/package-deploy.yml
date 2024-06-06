@@ -4,6 +4,10 @@ on:
       SERVICE_NAME:
         required: true
         type: string
+    secrets:
+      TOKEN:
+        required: true
+
 
 env:
   BUILD_SHA: ${{ github.sha }}
