@@ -13,7 +13,7 @@ env:
   BUILD_SHA: ${{ github.sha }}
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
   SERVICE_NAME: ${{inputs.SERVICE_NAME}}
-  PACKAGE_NAME: "com.lineup.${{inputs.SERVICE_NAME}}"
+  PACKAGE_NAME: "com.lineup.${{inputs.SERVICE_NAME}}-api"
   PACKAGE_TYPE: "maven"
   ORG: "Nilo-Innovation"
 
@@ -26,13 +26,13 @@ jobs:
 
       - name: Obtener la versión más reciente del paquete
         run: |
-          RESPONSE=$(curl -L \
+          VERSION=$(curl -L \
                 -H "Accept: application/vnd.github+json" \
                 -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
                 -H "X-GitHub-Api-Version: 2022-11-28" \
-                "https://api.github.com/orgs/${{ env.ORG }}/packages/${{ env.PACKAGE_TYPE }}/${{ env.PACKAGE_NAME }}/versions")  
-          echo "$RESPONSE" | jq .
-
+                "https://api.github.com/orgs/${{ env.ORG }}/packages/${{ env.PACKAGE_TYPE }}/${{ env.PACKAGE_NAME }}/versions" | jq -r '.[0].name')
+          echo "La versión más reciente es: $VERSION"
+          echo "PACKAGE_VERSION=$VERSION" >> $GITHUB_ENV
       - name: Usar la versión del paquete
         run: |
           echo "Usando la versión del paquete: $PACKAGE_VERSION"
