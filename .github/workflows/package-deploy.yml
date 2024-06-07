@@ -47,7 +47,7 @@ jobs:
                 -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
                 -H "X-GitHub-Api-Version: 2022-11-28" \
                 "https://api.github.com/orgs/${{ env.ORG }}/packages/${{ env.PACKAGE_TYPE }}/${{ env.PACKAGE_NAME }}/versions" | jq -r '.[0].name' | tr -d '"' | tr -d ',' | tr -d '\n' | xargs)
-          GIT_VERSION=$(echo "$VERSION" | sed 's/-RELEASE//')
+          GIT_VERSION=$(echo "$VERSION")
           echo "La versión reciente del paquete es: $GIT_VERSION"
           echo "PACKAGE_VERSION=$GIT_VERSION" >> $GITHUB_ENV
   
@@ -59,13 +59,13 @@ jobs:
         id: gradle_version
         run: |
           GRADLE_VERSION=$(grep 'version =' ./${{ env.SERVICE_NAME }}-api/build.gradle.kts | sed "s/version = //g" | tr -d '"' | tr -d ',' | xargs)
-          G_VERSION=$(echo "$GRADLE_VERSION" | sed 's/-RELEASE//')
+          G_VERSION=$(echo "$GRADLE_VERSION")
           echo "Versión en build.gradle.kts: $G_VERSION"
           echo "gradle_version=$G_VERSION" >> $GITHUB_ENV
 
       - name: Comparar versiones
         run: |
-          if [ "$PACKAGE_VERSION" != "$GRADLE_VERSION" ]; then
+          if [ "$PACKAGE_VERSION" != "$gradle_version" ]; then
             echo "Las versiones no coinciden. Desencadenando acción..."
             ./gradlew publish
           else
