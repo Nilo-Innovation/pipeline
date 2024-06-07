@@ -23,41 +23,43 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-#      - name: ☕ Set up Java
-#        uses: actions/setup-java@v2
-#        with:
-#          distribution: 'adopt'
-#          java-version: 11
-#      - name: 🐘 Stop Gradle Daemon(s)
-#        uses: eskatos/gradle-command-action@v1
-#        env:
-#          GRADLE_OPTS: -Xmx2000m -XX:MaxPermSize=256m -Dorg.gradle.jvmargs='-Xmx2048m -XX:MaxPermSize=256m'
-#        with:
-#          arguments: --stop
-#          gradle-version: 7.4.2
+
+      - name: ☕ Set up Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: 11
+
+      - name: 🐘 Stop Gradle Daemon(s)
+        uses: eskatos/gradle-command-action@v1
+        with:
+          arguments: --stop
+          gradle-version: 7.4.2
+
       - name: Obtener la versión más reciente del paquete
         run: |
           VERSION=$(curl -L \
                 -H "Accept: application/vnd.github+json" \
                 -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
                 -H "X-GitHub-Api-Version: 2022-11-28" \
-                "https://api.github.com/orgs/${{ env.ORG }}/packages/${{ env.PACKAGE_TYPE }}/${{ env.PACKAGE_NAME }}/versions" | jq -r '.[0].name' | xargs)
+                "https://api.github.com/orgs/${{ env.ORG }}/packages/${{ env.PACKAGE_TYPE }}/${{ env.PACKAGE_NAME }}/versions" | jq -r '.[0].name' | tr -d '"' | tr -d ',' | tr -d '\n' | xargs)
           GIT_VERSION=$(echo "$VERSION" | sed 's/-RELEASE//')
           echo "La versión reciente del paquete es: $GIT_VERSION"
-          echo "PACKAGE_VERSION=$GIT_VERSION"
-          PACKAGE_VERSION=$(echo "$PACKAGE_VERSION" | xargs | tr -d '\n') >> $GITHUB_ENV
+          echo "PACKAGE_VERSION=$GIT_VERSION" >> $GITHUB_ENV
+  
       - name: Usar la versión del paquete
         run: |
           echo "Usando la versión del paquete: $PACKAGE_VERSION"
+
       - name: Leer versión de build.gradle.kts
         id: gradle_version
         run: |
-          GRADLE_VERSION=$(grep 'version =' ./${{ env.SERVICE_NAME }}-api/build.gradle.kts | sed "s/version = //g" | tr -d '"' | tr -d ',' | xargs)
+          GRADLE_VERSION=$(grep 'version =' ./${{ env.SERVICE_NAME }}-api/build.gradle.kts | sed "s/version = //g" | tr -d '"' | tr -d ',' | tr -d '\n' | xargs)
           G_VERSION=$(echo "$GRADLE_VERSION" | sed 's/-RELEASE//')
           echo "Versión en build.gradle.kts: $G_VERSION"
-          echo "$gradle_version=$G_VERSION"
-          gradle_version=$(echo "$GRADLE_VERSION" | xargs | tr -d '\n') >> $GITHUB_ENV
-      - name: Comparar versiones y publicar artefacto
+          echo "$gradle_version=$G_VERSION" >> $GITHUB_ENV
+
+      - name: Comparar versiones
         run: |
           if [ "$PACKAGE_VERSION" != "$GRADLE_VERSION" ]; then
             echo "Las versiones no coinciden. Desencadenando acción..."
