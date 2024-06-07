@@ -50,10 +50,6 @@ jobs:
           GIT_VERSION=$(echo "$VERSION")
           echo "La versión reciente del paquete es: $GIT_VERSION"
           echo "PACKAGE_VERSION=$GIT_VERSION" >> $GITHUB_ENV
-  
-      - name: Usar la versión del paquete
-        run: |
-          echo "Usando la versión del paquete: $PACKAGE_VERSION"
 
       - name: Leer versión de build.gradle.kts
         id: gradle_version
