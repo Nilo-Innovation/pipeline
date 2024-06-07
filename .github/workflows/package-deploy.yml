@@ -24,6 +24,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - uses: actions/cache/restore@v3
+        with: 
+          path: ${{  env.SERVICE_NAME  }}/build
+          key: ${{ runner.os }}-gradlew-${{  env.SERVICE_NAME  }}-${{ github.sha }}
+
       - name: ☕ Set up Java
         uses: actions/setup-java@v2
         with:
@@ -66,3 +71,6 @@ jobs:
           else
             echo "Las versiones coinciden. No se requiere acción."
           fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          GITHUB_USERNAME: bgarridop
