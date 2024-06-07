@@ -29,7 +29,6 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: 11
-
       - name: 🐘 Stop Gradle Daemon(s)
         uses: eskatos/gradle-command-action@v1
         with:
@@ -54,7 +53,7 @@ jobs:
       - name: Leer versión de build.gradle.kts
         id: gradle_version
         run: |
-          GRADLE_VERSION=$(grep 'version =' ./${{ env.SERVICE_NAME }}-api/build.gradle.kts | sed "s/version = //g" | tr -d '"' | tr -d ',' | tr -d '\n' | xargs)
+          GRADLE_VERSION=$(grep 'version =' ./${{ env.SERVICE_NAME }}-api/build.gradle.kts | sed "s/version = //g" | tr -d '"' | tr -d ',' | xargs)
           G_VERSION=$(echo "$GRADLE_VERSION" | sed 's/-RELEASE//')
           echo "Versión en build.gradle.kts: $G_VERSION"
           echo "$gradle_version=$G_VERSION" >> $GITHUB_ENV
