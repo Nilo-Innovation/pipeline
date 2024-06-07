@@ -56,7 +56,7 @@ jobs:
           GRADLE_VERSION=$(grep 'version =' ./${{ env.SERVICE_NAME }}-api/build.gradle.kts | sed "s/version = //g" | tr -d '"' | tr -d ',' | xargs)
           G_VERSION=$(echo "$GRADLE_VERSION" | sed 's/-RELEASE//')
           echo "Versión en build.gradle.kts: $G_VERSION"
-          echo "$gradle_version=$G_VERSION" >> $GITHUB_ENV
+          echo "gradle_version=$G_VERSION" >> $GITHUB_ENV
 
       - name: Comparar versiones
         run: |
