@@ -82,15 +82,14 @@ jobs:
       - name: Inject integration API Gateway
         run: |
           aws s3 sync s3://lineup-terraform-${{  env.STAGE  }}/apigateway  ./apigateway
-          sed -i "s|{PATH_SERVICE}|/${{ secrets.PATH_SERVICE }}|g" apigateway/apigateway.py
-          sed -i "s|{ACCOUNT_ID}|/${{ secrets.AWS_ACCOUNT_ID }}|g" apigateway/apigateway.py
+          sed -i "s|PATH_SERVICE|/${{ secrets.PATH_SERVICE }}|g" apigateway/apigateway.py
+          sed -i "s|ACCOUNT_ID|/${{ secrets.AWS_ACCOUNT_ID }}|g" apigateway/apigateway.py
           cat apigateway/apigateway.py
           chmod +x apigateway/apigateway.py
           python apigateway/apigateway.py
           cd apigateway && base64 -i swagger_updated.json > swagger-api.json
       - name: API Gateway
         run: |
-          cat apigateway/swagger-api.json
           aws apigateway put-rest-api --rest-api-id ${{  env.API_ID  }} --mode overwrite --no-fail-on-warnings --body file://apigateway/swagger-api.json
       - name: Checkout code
         uses: actions/checkout@v2
