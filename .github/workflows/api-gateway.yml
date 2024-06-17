@@ -88,6 +88,7 @@ jobs:
           cat apigateway/apigateway.py
           chmod +x apigateway/apigateway.py
           python apigateway/apigateway.py
+          cat swagger_updated.json
           cd apigateway && base64 -i swagger_updated.json > swagger-api.json
       - name: API Gateway
         run: |
