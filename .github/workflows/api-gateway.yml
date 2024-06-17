@@ -93,6 +93,8 @@ jobs:
           aws apigateway put-rest-api --rest-api-id ${{  env.API_ID  }} --mode overwrite --no-fail-on-warnings --body file://apigateway/swagger-api.json
           sed -i "s|API_ID|${{ env.API_ID }}|g" apigateway/cors.py
           chmod +x apigateway/cors.py
+          python -m pip install --upgrade pip
+          pip install boto3
           python apigateway/cors.py
       - name: Checkout code
         uses: actions/checkout@v2
