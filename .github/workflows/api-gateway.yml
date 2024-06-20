@@ -91,7 +91,7 @@ jobs:
           cd apigateway && base64 -i swagger_updated.json > swagger-api.json
       - name: API Gateway
         run: |
-          aws apigateway put-rest-api --rest-api-id ${{  env.API_ID  }} --mode overwrite --no-fail-on-warnings --body file://apigateway/swagger-api.json
+          aws apigateway put-rest-api --rest-api-id ${{  env.API_ID  }} --mode merge --no-fail-on-warnings --body file://apigateway/swagger-api.json
           sed -i "s|API_ID|${{ env.API_ID }}|g" apigateway/cors.py
           chmod +x apigateway/cors.py
           python -m pip install --upgrade pip
