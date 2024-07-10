@@ -90,14 +90,6 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
           role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
-      - name: Verify Secret Format
-        run: |
-          echo "${{ secrets.EKS_KUBE_CONFIG_DATA }}" | grep -q "expected_pattern"
-          if [ $? -eq 0 ]; then
-            echo "Secret format is correct."
-          else
-            echo "Secret format is incorrect."
-          fi
       - name: 🔓 Login to Amazon ECR
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
         id: login-ecr-aws
