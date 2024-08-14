@@ -82,16 +82,15 @@ jobs:
               echo "La versión gradle_version es menor que PACKAGE_VERSION en $dir. No se desplegará artefacto al Package Registry."
             fi
           done
-
-
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
           GITHUB_USERNAME: bgarridop
-      - name: Notify Slack on Failure
-        if: failure()
-        run: |
-          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Artefact deploy ${{ env.SERVICE_NAME }} failed! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
-      - name: Notify Slack on Success
-        if: success()
-        run: |
-          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Artefact deploy ${{ env.SERVICE_NAME }} succeeded (validate if you uploaded or found a match.)! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      # - name: Notify Slack on Failure
+      #   if: failure()
+      #   run: |
+      #     curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Artefact deploy ${{ env.SERVICE_NAME }} failed! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
+      # - name: Notify Slack on Success
+      #   if: success()
+      #   run: |
+      #     curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Artefact deploy ${{ env.SERVICE_NAME }} succeeded (validate if you uploaded or found a match.)! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
