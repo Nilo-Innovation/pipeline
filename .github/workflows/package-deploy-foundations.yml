@@ -73,6 +73,8 @@ jobs:
               echo "La versión gradle_version es mayor que PACKAGE_VERSION en $dir. Desplegando artefacto al Package Registry..."
               
               cd $dir
+              ./gradlew clean
+              ./gradlew build
               ./gradlew publish
               cd -
               
