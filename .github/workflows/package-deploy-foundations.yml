@@ -1,9 +1,5 @@
 on:
   workflow_call:
-    inputs:
-      SERVICE_NAME:
-        required: true
-        type: string
     secrets:
       TOKEN:
         required: true
