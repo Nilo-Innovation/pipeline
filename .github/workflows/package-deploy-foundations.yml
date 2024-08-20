@@ -46,7 +46,7 @@ jobs:
             
             GIT_VERSION=$(echo "$VERSION")
             echo "La versión reciente del paquete para $PACKAGE_NAME es: $GIT_VERSION"
-            echo "PACKAGE_VERSION_$SERVICE_NAME=$GIT_VERSION" >> $GITHUB_ENV
+            echo "PACKAGE_VERSION_SERVICE_NAME=$GIT_VERSION" >> $GITHUB_ENV
           done
 
       - name: Leer versión de build.gradle.kts en directorios que comienzan con 'lineup-'
@@ -64,12 +64,11 @@ jobs:
         run: |
           for dir in $(find . -type f -name 'build.gradle.kts' -path './lineup-*' -exec dirname {} \;); do
             echo "Comparando versiones en $dir"
-            SERVICE_NAME=$(basename "$dir")
-            PACKAGE_VERSION_$SERVICE_NAME=$(grep 'version =' ./path/to/package/version/file | sed "s/version = //g" | tr -d '"' | tr -d ',' | xargs)
+            PACKAGE_VERSION_SERVICE_NAME=$(grep 'version =' ./path/to/package/version/file | sed "s/version = //g" | tr -d '"' | tr -d ',' | xargs)
             gradle_version=$(eval echo "\$gradle_version_$dir")
 
-            if [ "$(printf '%s\n' "$PACKAGE_VERSION_$dir" "$gradle_version" | sort -V | head -n1)" = "$PACKAGE_VERSION_$SERVICE_NAME" ] && [ "$PACKAGE_VERSION_$SERVICE_NAME" != "$gradle_version" ]; then
-              echo "La versión gradle_version es mayor que PACKAGE_VERSION_$SERVICE_NAME en $dir. Desplegando artefacto al Package Registry..."
+            if [ "$(printf '%s\n' "$PACKAGE_VERSION_SERVICE_NAME" "$gradle_version" | sort -V | head -n1)" = "$PACKAGE_VERSION_SERVICE_NAME" ] && [ "$PACKAGE_VERSION_SERVICE_NAME" != "$gradle_version" ]; then
+              echo "La versión gradle_version es mayor que $PACKAGE_VERSION_SERVICE_NAME en $dir. Desplegando artefacto al Package Registry..."
               
               cd $dir
               ./gradlew clean
@@ -77,7 +76,7 @@ jobs:
               ./gradlew publish
               cd -
               
-            elif [ "$PACKAGE_VERSION_$SERVICE_NAME" = "$gradle_version" ]; then
+            elif [ "$PACKAGE_VERSION_SERVICE_NAME" = "$gradle_version" ]; then
               echo "Las versiones coinciden en $dir. No se desplegará artefacto al Package Registry."
             else
               echo "La versión gradle_version es menor que PACKAGE_VERSION en $dir. No se desplegará artefacto al Package Registry."
