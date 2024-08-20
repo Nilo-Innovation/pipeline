@@ -57,17 +57,20 @@ jobs:
             GRADLE_VERSION=$(grep 'version =' $dir/build.gradle.kts | sed "s/version = //g" | tr -d '"' | tr -d ',' | xargs)
             G_VERSION=$(echo "$GRADLE_VERSION")
             echo "Versión en $dir/build.gradle.kts: $G_VERSION"
-            echo "gradle_version_$dir=$G_VERSION" >> $GITHUB_ENV
+            echo "gradle_version=$G_VERSION" >> $GITHUB_ENV
           done
 
       - name: Comparar versiones y publicar artefactos en directorios que comienzan con 'lineup-'
         run: |
           for dir in $(find . -type f -name 'build.gradle.kts' -path './lineup-*' -exec dirname {} \;); do
             echo "Comparando versiones en $dir"
-            PACKAGE_VERSION_SERVICE_NAME=$(grep 'version =' ./path/to/package/version/file | sed "s/version = //g" | tr -d '"' | tr -d ',' | xargs)
-            gradle_version=$(eval echo "\$gradle_version_$dir")
+            
+            # Las variables se usan directamente ya que están en $GITHUB_ENV
+            echo "PACKAGE_VERSION_SERVICE_NAME: $PACKAGE_VERSION_SERVICE_NAME"
+            echo "gradle_version: $gradle_version"
 
-            if [ "$(printf '%s\n' "$PACKAGE_VERSION_SERVICE_NAME" "$gradle_version" | sort -V | head -n1)" = "$PACKAGE_VERSION_SERVICE_NAME" ] && [ "$PACKAGE_VERSION_SERVICE_NAME" != "$gradle_version" ]; then
+            # Comparación de versiones, despliega solo si la versión de Gradle es mayor
+            if [ "$(printf '%s\n' "$PACKAGE_VERSION_SERVICE_NAME" "$gradle_version" | sort -V | tail -n1)" = "$gradle_version" ] && [ "$PACKAGE_VERSION_SERVICE_NAME" != "$gradle_version" ]; then
               echo "La versión gradle_version es mayor que $PACKAGE_VERSION_SERVICE_NAME en $dir. Desplegando artefacto al Package Registry..."
               
               cd $dir
@@ -76,12 +79,11 @@ jobs:
               ./gradlew publish
               cd -
               
-            elif [ "$PACKAGE_VERSION_SERVICE_NAME" = "$gradle_version" ]; then
-              echo "Las versiones coinciden en $dir. No se desplegará artefacto al Package Registry."
             else
-              echo "La versión gradle_version es menor que PACKAGE_VERSION en $dir. No se desplegará artefacto al Package Registry."
+              echo "No se desplegará artefacto en $dir ya que la versión gradle_version no es mayor que $PACKAGE_VERSION_SERVICE_NAME."
             fi
           done
+
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
           GITHUB_USERNAME: bgarridop
