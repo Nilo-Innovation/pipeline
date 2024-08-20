@@ -34,7 +34,7 @@ jobs:
         run: |
           for dir in $(find . -type d -name 'lineup-*'); do
             SERVICE_NAME=$(basename "$dir")
-            PACKAGE_NAME="com.lineup.${SERVICE_NAME}-api"
+            PACKAGE_NAME="com.lineup.foundations.${SERVICE_NAME}"
             
             echo "Buscando la versión más reciente del paquete: $PACKAGE_NAME"
             
