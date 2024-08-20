@@ -65,10 +65,9 @@ jobs:
         run: |
           for dir in $(find . -type f -name 'build.gradle.kts' -path './lineup-*' -exec dirname {} \;); do
             echo "Comparando versiones en $dir"
-            SERVICE_NAME=$(basename "$dir")
 
-            echo "PACKAGE_VERSION_$SERVICE_NAME: $PACKAGE_VERSION_SERVICE_NAME"
-            echo "gradle_version: $gradle_version"
+            echo "PACKAGE_VERSION_$(basename "$dir"): $PACKAGE_VERSION_SERVICE_NAME"
+            echo "gradle_version-$(basename "$dir"): $gradle_version"
 
             if [ "$(printf '%s\n' "$PACKAGE_VERSION_SERVICE_NAME" "$gradle_version" | sort -V | tail -n1)" = "$gradle_version" ] && [ "$PACKAGE_VERSION_SERVICE_NAME" != "$gradle_version" ]; then
               echo "La versión gradle_version es mayor que $PACKAGE_VERSION_SERVICE_NAME en $dir. Desplegando artefacto al Package Registry..."
