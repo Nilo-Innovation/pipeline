@@ -67,8 +67,14 @@ jobs:
             echo "Comparando versiones en $dir"
             
             SERVICE_NAME=$(basename "$dir")
-            gradle_version=$(eval echo "\$gradle_version_${SERVICE_NAME}")
-            PACKAGE_VERSION_SERVICE_NAME=$(eval echo "\$PACKAGE_VERSION_${SERVICE_NAME}")
+            
+            # Construcción de los nombres de las variables
+            GRADLE_VERSION_VAR="gradle_version_${SERVICE_NAME}"
+            PACKAGE_VERSION_VAR="PACKAGE_VERSION_${SERVICE_NAME}"
+            
+            # Acceso directo a las variables usando el nombre de la variable como índice en el entorno
+            gradle_version=${!GRADLE_VERSION_VAR}
+            PACKAGE_VERSION_SERVICE_NAME=${!PACKAGE_VERSION_VAR}
 
             echo "PACKAGE_VERSION_${SERVICE_NAME}: $PACKAGE_VERSION_SERVICE_NAME"
             echo "gradle_version_${SERVICE_NAME}: $gradle_version"
