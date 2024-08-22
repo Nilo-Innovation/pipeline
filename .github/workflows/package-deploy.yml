@@ -61,12 +61,13 @@ jobs:
 
       - name: Comparar versiones
         run: |
-          if [ "$PACKAGE_VERSION" != "$gradle_version" ]; then
-            echo "Las versiones no coinciden. Desplegando artefacto al Package Registry..."
+          if [ "$(printf '%s\n' "$PACKAGE_VERSION" "$gradle_version" | sort -V | head -n1)" = "$PACKAGE_VERSION" ] && [ "$PACKAGE_VERSION" != "$gradle_version" ]; then
+            echo "La versión gradle_version es mayor que PACKAGE_VERSION. Desplegando artefacto al Package Registry..."
             ./gradlew publish
           else
-            echo "Las versiones coinciden. No se desplegara artefacto al Package Registry."
+            echo "Las versiones coinciden o gradle_version no es mayor. No se desplegará artefacto al Package Registry."
           fi
+          
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
           GITHUB_USERNAME: bgarridop
