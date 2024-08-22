@@ -46,7 +46,7 @@ jobs:
             
             GIT_VERSION=$(echo "$VERSION")
             echo "La versión reciente del paquete para $PACKAGE_NAME es: $GIT_VERSION"
-            echo "PACKAGE_VERSION_SERVICE_NAME=$GIT_VERSION" >> $GITHUB_ENV
+            echo "PACKAGE_VERSION-$SERVICE_NAME=$GIT_VERSION" >> $GITHUB_ENV
           done
 
       - name: Leer versión de build.gradle.kts en directorios que comienzan con 'lineup-'
@@ -58,13 +58,16 @@ jobs:
             GRADLE_VERSION=$(grep 'version =' $dir/build.gradle.kts | sed "s/version = //g" | tr -d '"' | tr -d ',' | xargs)
             G_VERSION=$(echo "$GRADLE_VERSION")
             echo "Versión en $dir/build.gradle.kts: $G_VERSION"
-            echo "gradle_version=$G_VERSION" >> $GITHUB_ENV
+            echo "gradle_version-$SERVICE_NAME=$G_VERSION" >> $GITHUB_ENV
           done
 
       - name: Comparar versiones y publicar artefactos en directorios que comienzan con 'lineup-'
         run: |
           for dir in $(find . -type f -name 'build.gradle.kts' -path './lineup-*' -exec dirname {} \;); do
             echo "Comparando versiones en $dir"
+            
+            gradle_version=$(eval echo "\$gradle_version_$SERVICE_NAME")
+            PACKAGE_VERSION_SERVICE_NAME=$(eval echo "\$PACKAGE_VERSION-$SERVICE_NAME")
 
             echo "PACKAGE_VERSION_$(basename "$dir"): $PACKAGE_VERSION_SERVICE_NAME"
             echo "gradle_version-$(basename "$dir"): $gradle_version"
