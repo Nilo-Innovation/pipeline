@@ -33,7 +33,7 @@ jobs:
       - name: Obtener la versión más reciente del paquete para cada servicio lineup-
         run: |
           for dir in $(find . -type d -name 'lineup-*'); do
-            SERVICE_NAME=$(basename "$dir")
+            SERVICE_NAME=$(basename "$dir" | tr '-' '_')
             PACKAGE_NAME="com.lineup.foundations.${SERVICE_NAME}"
             
             echo "Buscando la versión más reciente del paquete: $PACKAGE_NAME"
@@ -44,36 +44,31 @@ jobs:
                   -H "X-GitHub-Api-Version: 2022-11-28" \
                   "https://api.github.com/orgs/${{ env.ORG }}/packages/${{ env.PACKAGE_TYPE }}/${PACKAGE_NAME}/versions" | jq -r '.[0].name' | tr -d '"' | tr -d ',' | tr -d '\n' | xargs)
             
-            GIT_VERSION=$(echo "$VERSION")
-            echo "La versión reciente del paquete para $PACKAGE_NAME es: $GIT_VERSION"
-            echo "PACKAGE_VERSION_$SERVICE_NAME=$GIT_VERSION" >> $GITHUB_ENV
+            echo "La versión reciente del paquete para $PACKAGE_NAME es: $VERSION"
+            echo "PACKAGE_VERSION_${SERVICE_NAME}=$VERSION" >> $GITHUB_ENV
           done
 
       - name: Leer versión de build.gradle.kts en directorios que comienzan con 'lineup-'
         id: gradle_version
         run: |
           for dir in $(find . -type f -name 'build.gradle.kts' -path './lineup-*' -exec dirname {} \;); do
-            echo "Entrando al directorio $dir"
-            SERVICE_NAME=$(basename "$dir")
+            SERVICE_NAME=$(basename "$dir" | tr '-' '_')
             GRADLE_VERSION=$(grep 'version =' $dir/build.gradle.kts | sed "s/version = //g" | tr -d '"' | tr -d ',' | xargs)
-            G_VERSION=$(echo "$GRADLE_VERSION")
-            echo "Versión en $dir/build.gradle.kts: $G_VERSION"
-            echo "gradle_version_$SERVICE_NAME=$G_VERSION" >> $GITHUB_ENV
+            
+            echo "Versión en $dir/build.gradle.kts: $GRADLE_VERSION"
+            echo "gradle_version_${SERVICE_NAME}=$GRADLE_VERSION" >> $GITHUB_ENV
           done
 
       - name: Comparar versiones y publicar artefactos en directorios que comienzan con 'lineup-'
         run: |
           for dir in $(find . -type f -name 'build.gradle.kts' -path './lineup-*' -exec dirname {} \;); do
-            echo "Comparando versiones en $dir"
-            
-            # Obtener el nombre del servicio y reemplazar guiones por guiones bajos
             SERVICE_NAME=$(basename "$dir" | tr '-' '_')
             
-            # Construcción de los nombres de las variables
+            # Construir los nombres de las variables
             GRADLE_VERSION_VAR="gradle_version_${SERVICE_NAME}"
             PACKAGE_VERSION_VAR="PACKAGE_VERSION_${SERVICE_NAME}"
             
-            # Acceso directo a las variables usando el nombre de la variable como índice en el entorno
+            # Acceder a los valores almacenados en $GITHUB_ENV
             gradle_version=${!GRADLE_VERSION_VAR}
             PACKAGE_VERSION_SERVICE_NAME=${!PACKAGE_VERSION_VAR}
 
@@ -91,7 +86,6 @@ jobs:
               echo "No se desplegará artefacto en $dir ya que la versión gradle_version no es mayor que $PACKAGE_VERSION_SERVICE_NAME."
             fi
           done
-
 
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
