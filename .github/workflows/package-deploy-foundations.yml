@@ -44,9 +44,8 @@ jobs:
                   -H "X-GitHub-Api-Version: 2022-11-28" \
                   "https://api.github.com/orgs/${{ env.ORG }}/packages/${{ env.PACKAGE_TYPE }}/${PACKAGE_NAME}/versions" | jq -r '.[0].name' | tr -d '"' | tr -d ',' | tr -d '\n' | xargs)
             
-            GIT_VERSION=$(echo "$VERSION")
-            echo "La versión reciente del paquete para $PACKAGE_NAME es: $GIT_VERSION"
-            echo "PACKAGE_VERSION_${SERVICE_NAME}=$GIT_VERSION" >> $GITHUB_ENV
+            echo "La versión reciente del paquete para $PACKAGE_NAME es: $VERSION"
+            echo "PACKAGE_VERSION_${SERVICE_NAME}=$VERSION" >> $GITHUB_ENV
           done
 
       - name: Leer versión de build.gradle.kts en directorios que comienzan con 'lineup-'
@@ -65,11 +64,9 @@ jobs:
           for dir in $(find . -type f -name 'build.gradle.kts' -path './lineup-*' -exec dirname {} \;); do
             SERVICE_NAME=$(basename "$dir" | tr '-' '_')
             
-            # Construir los nombres de las variables
             GRADLE_VERSION_VAR="gradle_version_${SERVICE_NAME}"
             PACKAGE_VERSION_VAR="PACKAGE_VERSION_${SERVICE_NAME}"
             
-            # Acceder a los valores almacenados en $GITHUB_ENV
             gradle_version=${!GRADLE_VERSION_VAR}
             PACKAGE_VERSION_SERVICE_NAME=${!PACKAGE_VERSION_VAR}
 
