@@ -34,6 +34,7 @@ jobs:
         run: |
           for dir in $(find . -type d -name 'lineup-*'); do
             SERVICE_NAME=$(basename "$dir")
+            SERVICE=$(basename "$dir" | tr '-' '_')
             PACKAGE_NAME="com.lineup.foundations.${SERVICE_NAME}"
             
             echo "Buscando la versión más reciente del paquete: $PACKAGE_NAME"
@@ -45,7 +46,7 @@ jobs:
                   "https://api.github.com/orgs/${{ env.ORG }}/packages/${{ env.PACKAGE_TYPE }}/${PACKAGE_NAME}/versions" | jq -r '.[0].name' | tr -d '"' | tr -d ',' | tr -d '\n' | xargs)
             
             echo "La versión reciente del paquete para $PACKAGE_NAME es: $VERSION"
-            echo "PACKAGE_VERSION_${SERVICE_NAME}=$VERSION" >> $GITHUB_ENV
+            echo "PACKAGE_VERSION_${SERVICE}=$VERSION" >> $GITHUB_ENV
           done
 
       - name: Leer versión de build.gradle.kts en directorios que comienzan con 'lineup-'
@@ -63,14 +64,15 @@ jobs:
         run: |
           for dir in $(find . -type f -name 'build.gradle.kts' -path './lineup-*' -exec dirname {} \;); do
             SERVICE_NAME=$(basename "$dir" | tr '-' '_')
+            SERVICE=$(basename "$dir" | tr '-' '_')
             
             GRADLE_VERSION_VAR="gradle_version_${SERVICE_NAME}"
-            PACKAGE_VERSION_VAR="PACKAGE_VERSION_${SERVICE_NAME}"
+            PACKAGE_VERSION_VAR="PACKAGE_VERSION_${SERVICE}"
             
             gradle_version=${!GRADLE_VERSION_VAR}
             PACKAGE_VERSION_SERVICE_NAME=${!PACKAGE_VERSION_VAR}
 
-            echo "PACKAGE_VERSION_${SERVICE_NAME}: $PACKAGE_VERSION_SERVICE_NAME"
+            echo "PACKAGE_VERSION_${SERVICE}: $PACKAGE_VERSION_SERVICE_NAME"
             echo "gradle_version_${SERVICE_NAME}: $gradle_version"
 
             if [ "$(printf '%s\n' "$PACKAGE_VERSION_SERVICE_NAME" "$gradle_version" | sort -V | tail -n1)" = "$gradle_version" ] && [ "$PACKAGE_VERSION_SERVICE_NAME" != "$gradle_version" ]; then
