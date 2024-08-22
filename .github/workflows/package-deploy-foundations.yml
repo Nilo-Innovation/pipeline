@@ -66,7 +66,7 @@ jobs:
           for dir in $(find . -type f -name 'build.gradle.kts' -path './lineup-*' -exec dirname {} \;); do
             echo "Comparando versiones en $dir"
             
-            gradle_version=$(eval echo "\$gradle_version_$SERVICE_NAME")
+            gradle_version=$(eval echo "\$gradle_version-$SERVICE_NAME")
             PACKAGE_VERSION_SERVICE_NAME=$(eval echo "\$PACKAGE_VERSION-$SERVICE_NAME")
 
             echo "PACKAGE_VERSION_$(basename "$dir"): $PACKAGE_VERSION_SERVICE_NAME"
