@@ -66,7 +66,8 @@ jobs:
           for dir in $(find . -type f -name 'build.gradle.kts' -path './lineup-*' -exec dirname {} \;); do
             echo "Comparando versiones en $dir"
             
-            SERVICE_NAME=$(basename "$dir")
+            # Obtener el nombre del servicio y reemplazar guiones por guiones bajos
+            SERVICE_NAME=$(basename "$dir" | tr '-' '_')
             
             # Construcción de los nombres de las variables
             GRADLE_VERSION_VAR="gradle_version_${SERVICE_NAME}"
@@ -82,14 +83,15 @@ jobs:
             if [ "$(printf '%s\n' "$PACKAGE_VERSION_SERVICE_NAME" "$gradle_version" | sort -V | tail -n1)" = "$gradle_version" ] && [ "$PACKAGE_VERSION_SERVICE_NAME" != "$gradle_version" ]; then
               echo "La versión gradle_version es mayor que $PACKAGE_VERSION_SERVICE_NAME en $dir. Desplegando artefacto al Package Registry..."
               
-              ./gradlew $SERVICE_NAME:clean
-              ./gradlew $SERVICE_NAME:build
-              ./gradlew $SERVICE_NAME:publish
+              ./gradlew ${SERVICE_NAME//_/-}:clean
+              ./gradlew ${SERVICE_NAME//_/-}:build
+              ./gradlew ${SERVICE_NAME//_/-}:publish
               
             else
               echo "No se desplegará artefacto en $dir ya que la versión gradle_version no es mayor que $PACKAGE_VERSION_SERVICE_NAME."
             fi
           done
+
 
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
