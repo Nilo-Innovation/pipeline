@@ -13,9 +13,13 @@ on:
     secrets:
       ALB_DEV:
         required: true
+      ALB_QA:
+        required: true
       ALB_PROD:
         required: true
       AWS_DEV_ACCOUNT_ID:
+        required: true
+      AWS_QA_ACCOUNT_ID:
         required: true
       AWS_PROD_ACCOUNT_ID:
         required: true
@@ -42,8 +46,6 @@ env:
   SERVICE_NAME: ${{inputs.SERVICE_NAME}}
   SERVICE_PORT: ${{inputs.SERVICE_PORT}}
   NEWRELIC: ${{ secrets.NEWRELIC }}
-  
-
 
 jobs:
   build:
@@ -64,6 +66,17 @@ jobs:
           echo "::set-env name=EKS_CLUSTER_NAME::dev-lineup-k8s-cluster"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
           echo "::set-env name=ALB::${{ secrets.ALB_DEV }}"
+          echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
+      - name: Set PROD environment variables
+        if: github.ref == 'refs/heads/qa'
+        env:
+          JAVA_OPTS: "-Xmx300m -Xms250m -XX:MaxMetaspaceSize=200m -XX:MetaspaceSize=130m -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps  -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=1m -Xloggc:/var/log/containers/gc-%t.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/var/log/containers"
+        run: |
+          echo "::set-env name=STAGE::qa"
+          echo "::set-env name=DOCKER_BUILD_TARGET::debug"
+          echo "::set-env name=EKS_CLUSTER_NAME::qa-lineup-k8s-cluster"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_QA_ACCOUNT_ID }}"
+          echo "::set-env name=ALB::${{ secrets.ALB_QA }}"
           echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
       - name: Set PROD environment variables
         if: github.ref == 'refs/heads/prod'
@@ -105,7 +118,7 @@ jobs:
           path: ${{  env.SERVICE_NAME  }}/build
           key: ${{ runner.os }}-gradlew-${{  env.SERVICE_NAME  }}-${{ github.sha }}
       - name: 🔑 Configure AWS Credentials
-        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/prod'
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
@@ -114,7 +127,7 @@ jobs:
           role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
           role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
       - name: 🔓 Login to Amazon ECR
-        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/prod'
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
       - name: 🏗️ Build, Tag, and Push Images to Amazon ECR

@@ -5,6 +5,8 @@ on:
         required: true
       AWS_PROD_ACCOUNT_ID:
         required: true
+      AWS_QA_ACCOUNT_ID:
+        required: true
       AWS_PIPELINE_ACCESS_KEY_ID:
         required: true
       AWS_PIPELINE_SECRET_ACCESS_KEY:
@@ -63,6 +65,11 @@ jobs:
       run: |
         echo "::set-env name=STAGE::dev"
         echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
+    - name: Set QA environment variables
+      if: github.ref == 'refs/heads/qa'
+      run: |
+        echo "::set-env name=STAGE::qa"
+        echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_QA_ACCOUNT_ID }}"
     - name: Set PROD environment variables
       if: github.ref == 'refs/heads/prod'
       run: |
