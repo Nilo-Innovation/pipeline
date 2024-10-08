@@ -131,7 +131,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
       - name: 🏗️ Build, Tag, and Push Images to Amazon ECR
-        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod'
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod' || github.ref == 'refs/heads/qa'
         env:
           IMAGE_TAG: latest
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
