@@ -41,7 +41,7 @@ jobs:
     env:
       ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set DEV environment variables
         if: github.ref == 'refs/heads/dev'
         run: |
@@ -61,7 +61,7 @@ jobs:
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
           echo "::set-env name=STATE_MACHINE::${{ secrets.ARN_STATE_MACHINE_PROD }}"
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: 🔑 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -103,7 +103,7 @@ jobs:
             aws stepfunctions update-state-machine --state-machine-arn "$existing_state_machine_arn" --definition file://config/state-machine.json
             echo "Estado xp-accumulation-system actualizado exitosamente."
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Notify Slack on Failure
         if: failure()
         run: |
