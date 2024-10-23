@@ -1,0 +1,54 @@
+on:
+  workflow_call:
+    inputs:
+      SERVICE_NAME:
+        required: false
+        type: string
+      SERVICE_PORT:
+        required: false
+        type: string
+      PATH_SERVICE:
+        required: false
+        type: string
+    secrets:
+      PACKAGE_USERNAME:
+        required: false
+      PACKAGE_TOKEN:
+        required: false
+env:
+  BUILD_SHA: ${{ github.sha }}
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+  ORGANIZATION: lineup
+  SERVICE_NAME: ${{inputs.SERVICE_NAME}}
+  SERVICE_PORT: ${{inputs.SERVICE_PORT}}
+
+jobs:
+  build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: ☕ Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: 11
+      - name: 🐘 Stop Gradle Daemon(s)
+        uses: eskatos/gradle-command-action@v1
+        env:
+          GRADLE_OPTS: -Xmx2000m -XX:MaxPermSize=256m -Dorg.gradle.jvmargs='-Xmx2048m -XX:MaxPermSize=256m'
+        with:
+          arguments: --stop
+          gradle-version: 7.4.2
+      - name: 🐘 Build Repository With Gradle
+        env:
+          GRADLE_OPTS: -Xmx2000m -XX:MaxPermSize=256m -Dorg.gradle.jvmargs='-Xmx2048m -XX:MaxPermSize=256m'
+          GITHUB_USERNAME: ${{ secrets.PACKAGE_USERNAME }}
+          GITHUB_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
+        run: |
+          echo $SERVICE_NAME
+          echo 'service name ' ${{inputs.SERVICE_NAME}}
+          ./gradlew $SERVICE_NAME:clean
+          ./gradlew $SERVICE_NAME:check
