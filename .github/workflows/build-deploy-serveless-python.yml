@@ -68,5 +68,5 @@ jobs:
     - name: serverless deploy
       uses: Nilo-Innovation/serverless-deploy-lineup@master
       with:
-        args: -c "cd ./${{ github.event.inputs.project }} && serverless plugin install --name serverless-python-requirements && serverless deploy"
+        args: -c "cd ./${{ github.event.inputs.project }} && serverless plugin install --name serverless-python-requirements && serverless deploy --stage env.STAGE"
         entrypoint: /bin/sh
