@@ -60,7 +60,7 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
         role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
         role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
