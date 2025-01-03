@@ -72,7 +72,7 @@ jobs:
           DOCKER_BUILD_TARGET: ${{ env.DOCKER_BUILD_TARGET }}
           ECR_TARGET: ${{ format('{0}.dkr.ecr.us-east-1.amazonaws.com/{1}-{2}/{3}:latest',env.AWS_ACCOUNT_ID, env.STAGE, env.ORGANIZATION, env.SERVICE_NAME ) }}
         run: |
-          docker buildx build --platform linux/amd64 -f Dockerfile -t $ECR_TARGET .
+          docker buildx build --platform linux/amd64 -f Dockerfile -t $ECR_TARGET --push .
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Notify Slack on Failure
