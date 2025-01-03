@@ -67,18 +67,18 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
       - name: 🏗️ Build, Tag, and Push Images to Amazon ECR - Front
         env:
-          IMAGE_TAG: latest/front
+          IMAGE_TAG: latest-front
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           DOCKER_BUILD_TARGET: ${{ env.DOCKER_BUILD_TARGET }}
-          ECR_TARGET: ${{ format('{0}.dkr.ecr.us-east-1.amazonaws.com/{1}-{2}/{3}:latest/front',env.AWS_ACCOUNT_ID, env.STAGE, env.ORGANIZATION, env.SERVICE_NAME ) }}
+          ECR_TARGET: ${{ format('{0}.dkr.ecr.us-east-1.amazonaws.com/{1}-{2}/{3}:latest-front',env.AWS_ACCOUNT_ID, env.STAGE, env.ORGANIZATION, env.SERVICE_NAME ) }}
         run: |
           docker buildx build --platform linux/amd64 -f Dockerfile -t $ECR_TARGET --push .
       - name: 🏗️ Build, Tag, and Push Images to Amazon ECR - Api
         env:
-          IMAGE_TAG: latest/api
+          IMAGE_TAG: latest-api
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           DOCKER_BUILD_TARGET: ${{ env.DOCKER_BUILD_TARGET }}
-          ECR_TARGET: ${{ format('{0}.dkr.ecr.us-east-1.amazonaws.com/{1}-{2}/{3}:latest/api',env.AWS_ACCOUNT_ID, env.STAGE, env.ORGANIZATION, env.SERVICE_NAME ) }}
+          ECR_TARGET: ${{ format('{0}.dkr.ecr.us-east-1.amazonaws.com/{1}-{2}/{3}:latest-api',env.AWS_ACCOUNT_ID, env.STAGE, env.ORGANIZATION, env.SERVICE_NAME ) }}
         run: |
           docker buildx build --platform linux/amd64 -f Dockerfile.api -t $ECR_TARGET --push .
       - name: Checkout code
