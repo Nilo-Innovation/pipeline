@@ -1,0 +1,42 @@
+name: Build jars
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        required: false
+        type: string
+        default: '["ubuntu-latest"]'
+      distribution:
+        type: string
+        required: true
+      java-version:
+        type: string
+        required: true
+      cache:
+        type: string
+        required: true
+      skip-sonarqube:
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  build:
+    concurrency:
+      group: "build-${{ github.ref_name }}"
+      cancel-in-progress: true
+    name: Build jars
+    runs-on: ${{ fromJSON( inputs.runs-on ) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: ${{ inputs.distribution }}
+          java-version: ${{ inputs.java-version }}
+          cache: ${{ inputs.cache }}
+      - name: Build jars
+        run: |
+          ./gradlew clean build
+
+    
