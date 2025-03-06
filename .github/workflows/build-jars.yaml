@@ -20,6 +20,11 @@ on:
         type: boolean
         required: false
         default: false
+    secrets:
+      PACKAGE_USERNAME:
+        required: true
+      PACKAGE_TOKEN:
+        required: true
 
 jobs:
   build:
@@ -36,6 +41,9 @@ jobs:
           java-version: ${{ inputs.java-version }}
           cache: ${{ inputs.cache }}
       - name: Build jars
+        env:
+          GITHUB_USERNAME: ${{ secrets.PACKAGE_USERNAME }}
+          GITHUB_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
         run: |
           ./gradlew clean build
 
