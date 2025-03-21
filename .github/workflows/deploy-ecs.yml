@@ -5,6 +5,12 @@ on:
       SERVICE_NAME:
         required: true
         type: string
+      ECS_SERVICE_NAME_FRONT:
+        required: true
+        type: string
+      ECS_SERVICE_NAME_API:
+        required: true
+        type: string
     secrets:
       AWS_DEV_ACCOUNT_ID:
         required: true
