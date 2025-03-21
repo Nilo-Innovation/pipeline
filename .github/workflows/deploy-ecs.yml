@@ -106,10 +106,9 @@ jobs:
           echo "taskDefinitionArn=$taskDefArn" >> $GITHUB_OUTPUT
       - name: Update ECS Service API
         run: |
-          echo "ECS_SERVICE_NAME=($ECS_SERVICE_NAME)"
           aws ecs update-service \
             --cluster $ECS_CLUSTER_NAME \
-            --service ${{ secrets.ECS_SERVICE_NAME_API }} \
+            --service ${{ env.ECS_SERVICE_NAME_API }} \
             --task-definition ${{ steps.register_new_revision_api.outputs.taskDefinitionArn }}
       - name: Get TaskDefinition Front
         id: get_current_task_front
@@ -143,7 +142,7 @@ jobs:
         run: |
           aws ecs update-service \
             --cluster $ECS_CLUSTER_NAME \
-            --service ${{ secrets.ECS_SERVICE_NAME_FRONT }} \
+            --service ${{ env.ECS_SERVICE_NAME_FRONT }} \
             --task-definition ${{ steps.register_new_revision_front.outputs.taskDefinitionArn }}
       - name: Checkout code
         uses: actions/checkout@v4
