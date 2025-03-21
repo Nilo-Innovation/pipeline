@@ -1,4 +1,3 @@
-
 on:
   workflow_call:
     inputs:
@@ -38,15 +37,13 @@ env:
 
 jobs:
   DeployECS:
+    name: Deploy ECS
+    #runs-on: [self-hosted, prod]
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy ECS
-        #runs-on: [self-hosted, prod]
-        runs-on: ubuntu-latest
-        steps:
-          - uses: actions/checkout@v4
-            with:
-              fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Set DEV environment variables
         if: github.ref == 'refs/heads/dev'
         run: |
