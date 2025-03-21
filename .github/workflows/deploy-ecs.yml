@@ -77,7 +77,7 @@ jobs:
           role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
           role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
       - name: Get TaskDefinition API
-        id: get_current_task
+        id: get_current_task_api
         run: |
           aws ecs describe-task-definition \
             --task-definition $ECS_TASK_DEFINITION_NAME_API \
@@ -111,7 +111,7 @@ jobs:
             --service ${{ secrets.ECS_SERVICE_NAME_API }} \
             --task-definition ${{ steps.register_new_revision_api.outputs.taskDefinitionArn }}
       - name: Get TaskDefinition Front
-        id: get_current_task
+        id: get_current_task_front
         run: |
           aws ecs describe-task-definition \
             --task-definition $ECS_TASK_DEFINITION_NAME_FRONT \
