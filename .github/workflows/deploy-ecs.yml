@@ -1,0 +1,151 @@
+
+on:
+  workflow_call:
+    inputs:
+      SERVICE_NAME:
+        required: true
+        type: string
+    secrets:
+      AWS_DEV_ACCOUNT_ID:
+        required: true
+      AWS_QA_ACCOUNT_ID:
+        required: true
+      AWS_PROD_ACCOUNT_ID:
+        required: true
+      AWS_PIPELINE_ACCESS_KEY_ID:
+        required: true
+      AWS_PIPELINE_SECRET_ACCESS_KEY:
+        required: true
+env:
+  BUILD_SHA: ${{ github.sha }}
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_PIPELINE_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PIPELINE_SECRET_ACCESS_KEY }}
+  AWS_REGION: us-east-1
+  ROLE_DURATION_SECONDS: 1200
+  AWS_DEFAULT_OUTPUT: json
+  AWS_DEPLOYMENT_ROLE: pipeline
+  SERVICE_NAME: ${{inputs.SERVICE_NAME}}
+  ORGANIZATION: lineup
+
+jobs:
+  DeployECS:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy ECS
+        #runs-on: [self-hosted, prod]
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+            with:
+              fetch-depth: 0
+      - name: Set DEV environment variables
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          echo "::set-env name=STAGE::dev"
+          echo "::set-env name=DOCKER_BUILD_TARGET::debug"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
+          echo "::set-env name=ECS_TASK_DEFINITION_NAME_FRONT::lineup-testing-tool-dev"
+          echo "::set-env name=ECS_TASK_DEFINITION_NAME_API::lineup-testing-tool-api-dev"
+          echo "::set-env name=ECS_CLUSTER_NAME::lineup-dev-ecs"
+      - name: Set PROD environment variables
+        if: github.ref == 'refs/heads/qa'
+        run: |
+          echo "::set-env name=STAGE::qa"
+          echo "::set-env name=DOCKER_BUILD_TARGET::debug"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_QA_ACCOUNT_ID }}"
+          echo "::set-env name=ECS_TASK_DEFINITION_NAME_FRONT::lineup-testing-tool-qa"
+          echo "::set-env name=ECS_TASK_DEFINITION_NAME_API::lineup-testing-tool-api-qa"
+          echo "::set-env name=ECS_CLUSTER_NAME::lineup-qa-ecs"
+      - name: Set PROD environment variables
+        if: github.ref == 'refs/heads/prod'
+        run: |
+          echo "::set-env name=STAGE::prod"
+          echo "::set-env name=DOCKER_BUILD_TARGET::debug"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
+      - name: 🔑 Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
+          role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
+      - name: Get TaskDefinition API
+        id: get_current_task
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition $ECS_TASK_DEFINITION_NAME_API \
+            --output json > current-task-def-api.json
+          cat current-task-def-api.json | jq '.taskDefinition | {
+            family,
+            taskRoleArn,
+            executionRoleArn,
+            networkMode,
+            containerDefinitions,
+            volumes,
+            placementConstraints,
+            requiresCompatibilities,
+            cpu,
+            memory
+          }' > new-task-def-api.json
+      - name: New revision to Task Definition API
+        id: register_new_revision_api
+        run: |
+          output=$(aws ecs register-task-definition \
+            --cli-input-json file://new-task-def-api.json \
+            --output json)
+          
+          echo "$output" > new-task-def-out.json
+          taskDefArn=$(cat new-task-def-out.json | jq -r '.taskDefinition.taskDefinitionArn')
+          echo "taskDefinitionArn=$taskDefArn" >> $GITHUB_OUTPUT
+      - name: Update ECS Service API
+        run: |
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER_NAME \
+            --service ${{ secrets.ECS_SERVICE_NAME_API }} \
+            --task-definition ${{ steps.register_new_revision_api.outputs.taskDefinitionArn }}
+      - name: Get TaskDefinition Front
+        id: get_current_task
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition $ECS_TASK_DEFINITION_NAME_FRONT \
+            --output json > current-task-def-front.json
+          cat current-task-def-front.json | jq '.taskDefinition | {
+            family,
+            taskRoleArn,
+            executionRoleArn,
+            networkMode,
+            containerDefinitions,
+            volumes,
+            placementConstraints,
+            requiresCompatibilities,
+            cpu,
+            memory
+          }' > new-task-def-front.json
+      - name: New revision to Task Definition Front
+        id: register_new_revision_front
+        run: |
+          output=$(aws ecs register-task-definition \
+            --cli-input-json file://new-task-def-front.json \
+            --output json)
+          
+          echo "$output" > new-task-def-out.json
+          taskDefArn=$(cat new-task-def-out.json | jq -r '.taskDefinition.taskDefinitionArn')
+          echo "taskDefinitionArn=$taskDefArn" >> $GITHUB_OUTPUT
+      - name: Update ECS Service Front
+        run: |
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER_NAME \
+            --service ${{ secrets.ECS_SERVICE_NAME_FRONT }} \
+            --task-definition ${{ steps.register_new_revision_front.outputs.taskDefinitionArn }}
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Notify Slack on Failure
+        if: failure()
+        run: |
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Deploy ECS ${{ env.SERVICE_NAME }} failed! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Notify Slack on Success
+        if: success()
+        run: |
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Deploy ECS ${{ env.SERVICE_NAME }} succeeded! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
