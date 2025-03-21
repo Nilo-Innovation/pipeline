@@ -106,6 +106,7 @@ jobs:
           echo "taskDefinitionArn=$taskDefArn" >> $GITHUB_OUTPUT
       - name: Update ECS Service API
         run: |
+          echo "ECS_SERVICE_NAME=($ECS_SERVICE_NAME)"
           aws ecs update-service \
             --cluster $ECS_CLUSTER_NAME \
             --service ${{ secrets.ECS_SERVICE_NAME_API }} \
