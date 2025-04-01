@@ -95,7 +95,7 @@ jobs:
           distribution: 'corretto'
           java-version: 11
       - name: 🐘 Stop Gradle Daemon(s)
-        uses: eskatos/gradle-command-action@v1
+        uses: eskatos/gradle-command-action@v1.4
         env:
           GRADLE_OPTS: -Xmx2000m -XX:MaxPermSize=256m -Dorg.gradle.jvmargs='-Xmx2048m -XX:MaxPermSize=256m'
         with:
