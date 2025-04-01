@@ -34,11 +34,11 @@ jobs:
         with:
           distribution: 'corretto'
           java-version: 11
-      - name: 🐘 Stop Gradle Daemon(s)
-        uses: eskatos/gradle-command-action@v1
-        with:
-          arguments: --stop
-          gradle-version: 7.4.2
+      # - name: 🐘 Stop Gradle Daemon(s)
+      #   uses: eskatos/gradle-command-action@v1
+      #   with:
+      #     arguments: --stop
+      #     gradle-version: 7.4.2
 
       - name: Obtener la versión más reciente del paquete
         run: |
