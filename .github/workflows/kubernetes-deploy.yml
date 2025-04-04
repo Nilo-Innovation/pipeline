@@ -158,7 +158,7 @@ jobs:
           aws cognito-idp update-user-pool-client \
             --user-pool-id ${{  env.POOL_ID  }} \
             --client-id ${{ env.CLIENT_ID }} \
-            --allowed-oauth-scopes ${{ steps.read_scopes.outputs.scopes }}
+            --allowed-oauth-scopes ${{ steps.read_scopes_json.outputs.scopes }}
       - name: Checkout code
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/prod'
         uses: actions/checkout@v4
