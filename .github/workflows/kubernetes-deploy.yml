@@ -139,15 +139,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN }}
         with:
           args: ${{ format('apply -f ./{0}/kubernetes.deployment.yml', env.SERVICE_NAME) }}
-      - name: Obtener CLIENT_ID por nombre
-        id: get_client_id
-        run: |
-          CLIENT_NAME="${{  env.SERVICE_NAME  }}"  # Reemplaza con el nombre del app client deseado
-          CLIENT_ID=$(aws cognito-idp list-user-pool-clients \
-                      --user-pool-id ${{  env.POOL_ID  }} \
-                      --query "UserPoolClients[?ClientName=='$CLIENT_NAME'].ClientId" \
-                      --output text)
-          echo "CLIENT_ID=$CLIENT_ID" >> $GITHUB_OUTPUT
+    - name: Get CLIENT_ID for name
+      id: get_client_id
+      run: |
+        CLIENT_NAME="${{ env.SERVICE_NAME }}"
+        echo "Buscando CLIENT_ID para el app client: '$CLIENT_NAME'"
+        CLIENT_ID=$(aws cognito-idp list-user-pool-clients \
+                    --user-pool-id ${{ env.POOL_ID }} \
+                    --query "UserPoolClients[?ClientName=='$CLIENT_NAME'].ClientId" \
+                    --output text)
+        echo "CLIENT_ID obtenido: '$CLIENT_ID'"
+        echo "CLIENT_ID=$CLIENT_ID" >> $GITHUB_OUTPUT
       - name: Read custome scopes JSON
         id: read_scopes_json
         run: |
