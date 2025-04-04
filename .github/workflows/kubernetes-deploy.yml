@@ -159,7 +159,7 @@ jobs:
         run: |
           aws cognito-idp update-user-pool-client \
             --user-pool-id ${{  env.POOL_ID  }} \
-            --client-id $CLIENT_ID \
+            --client-id "${{ steps.get_client_id.outputs.CLIENT_ID }}" \
             --allowed-o-auth-scopes ${{ steps.read_scopes_json.outputs.scopes }}
       - name: Checkout code
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/prod'
