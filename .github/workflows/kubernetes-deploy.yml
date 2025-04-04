@@ -39,6 +39,12 @@ on:
         required: true
       NEWRELIC:
         required: true
+      DEV_POOL_ID:
+        required: true
+      QA_POOL_ID:
+        required: true
+      PROD_POOL_ID:
+        required: true
 
 env:
   BUILD_SHA: ${{ github.sha }}
@@ -74,6 +80,7 @@ jobs:
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
           echo "::set-env name=EKS_KUBE_CONFIG_DATA::${{ secrets.DEV_KUBE_CONFIG_DATA }}"
           echo "::set-env name=ALB::${{ secrets.ALB_DEV }}"
+          echo "::set-env name=POOL_ID::${{ secrets.DEV_POOL_ID }}"
           echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
       - name: Set PROD environment variables
         if: github.ref == 'refs/heads/qa'
@@ -86,6 +93,7 @@ jobs:
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_QA_ACCOUNT_ID }}"
           echo "::set-env name=EKS_KUBE_CONFIG_DATA::${{ secrets.QA_KUBE_CONFIG_DATA }}"
           echo "::set-env name=ALB::${{ secrets.ALB_QA }}"
+          echo "::set-env name=POOL_ID::${{ secrets.QA_POOL_ID }}"
           echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
       - name: Set PROD environment variables
         if: github.ref == 'refs/heads/prod'
@@ -98,6 +106,7 @@ jobs:
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
           echo "::set-env name=EKS_KUBE_CONFIG_DATA::${{ secrets.PROD_KUBE_CONFIG_DATA }}"
           echo "::set-env name=ALB::${{ secrets.ALB_PROD }}"
+          echo "::set-env name=POOL_ID::${{ secrets.PROD_POOL_ID }}"
           echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
       - name: 🔑 Configure AWS Credentials
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/prod'
@@ -130,6 +139,26 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN }}
         with:
           args: ${{ format('apply -f ./{0}/kubernetes.deployment.yml', env.SERVICE_NAME) }}
+      - name: Obtener CLIENT_ID por nombre
+        id: get_client_id
+        run: |
+          CLIENT_NAME="${{  env.SERVICE_NAME  }}"  # Reemplaza con el nombre del app client deseado
+          CLIENT_ID=$(aws cognito-idp list-user-pool-clients \
+                      --user-pool-id ${{  env.POOL_ID  }} \
+                      --query "UserPoolClients[?ClientName=='$CLIENT_NAME'].ClientId" \
+                      --output text)
+          echo "CLIENT_ID=$CLIENT_ID" >> $GITHUB_OUTPUT
+      - name: Read custome scopes with .TXT
+        id: read_scopes
+        run: |
+          SCOPES=$(tr '\n' ' ' < custom_scopes.txt)
+          echo "scopes=$SCOPES" >> $GITHUB_OUTPUT
+      - name: Update Cognito App Client
+        run: |
+          aws cognito-idp update-user-pool-client \
+            --user-pool-id ${{  env.POOL_ID  }} \
+            --client-id ${{ env.CLIENT_ID }} \
+            --allowed-oauth-scopes ${{ steps.read_scopes.outputs.scopes }}
       - name: Checkout code
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/prod'
         uses: actions/checkout@v4
