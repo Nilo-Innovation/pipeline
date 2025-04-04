@@ -148,10 +148,10 @@ jobs:
                       --query "UserPoolClients[?ClientName=='$CLIENT_NAME'].ClientId" \
                       --output text)
           echo "CLIENT_ID=$CLIENT_ID" >> $GITHUB_OUTPUT
-      - name: Read custome scopes with .TXT
-        id: read_scopes
+      - name: Read custome scopes JSON
+        id: read_scopes_json
         run: |
-          SCOPES=$(tr '\n' ' ' < custom_scopes.txt)
+          SCOPES=$(jq -r '.scopes | join(" ")' ./${{ env.SERVICE_NAME }}/custom_scopes.json)
           echo "scopes=$SCOPES" >> $GITHUB_OUTPUT
       - name: Update Cognito App Client
         run: |
