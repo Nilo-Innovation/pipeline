@@ -37,18 +37,6 @@ jobs:
       matrix:
         node-version: [16.x]
     steps:
-    - uses: actions/checkout@v4
-
-    - uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-    - uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
-    - name: Install Serverless CLI + python-requirements plugin
-      run: |
-        npm install -g serverless           # CLI global para que npx no descargue cada vez
-        npx serverless plugin install -n serverless-python-requirements
     - name: Set DEV environment variables
       if: github.ref == 'refs/heads/dev'
       run: |
@@ -73,10 +61,16 @@ jobs:
         role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
         role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
     - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
+    - uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+    - name: Install Serverless CLI + python-requirements plugin
+      run: |
+        npm install -g serverless           # CLI global para que npx no descargue cada vez
+        npx serverless plugin install -n serverless-python-requirements
     - name: serverless deploy
       uses: Nilo-Innovation/serverless-deploy-lineup@master
       with:
