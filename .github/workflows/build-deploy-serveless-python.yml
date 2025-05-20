@@ -45,7 +45,7 @@ jobs:
     - name: Set QA environment variables
       if: github.ref == 'refs/heads/qa'
       run: |
-        echo "::set-env name=STAGE::qa"qa
+        echo "::set-env name=STAGE::qa"
         echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS__ACCOUNT_ID }}"
     - name: Set PROD environment variables
       if: github.ref == 'refs/heads/prod'
@@ -68,5 +68,4 @@ jobs:
     - name: serverless deploy
       uses: Nilo-Innovation/serverless-deploy-lineup@master
       with:
-        args: -c "cd ./${{ github.event.inputs.project }} && serverless plugin install --name serverless-python-requirements && serverless deploy --stage env.STAGE"
-        entrypoint: /bin/sh
+        args: deploy -s ${{ env.STAGE }} --force
