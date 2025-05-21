@@ -83,7 +83,6 @@ jobs:
       run: |
         npm install -g serverless           # CLI global para que npx no descargue cada vez
         npx serverless plugin install -n serverless-python-requirements
-    - name: serverless deploy
-      uses: Nilo-Innovation/serverless-deploy-lineup@master
-      with:
-        args: deploy -s ${{ env.STAGE }} --force
+    - name: Deploy con Serverless CLI
+      run: |
+        npx serverless deploy -s ${{ env.STAGE }} --force
