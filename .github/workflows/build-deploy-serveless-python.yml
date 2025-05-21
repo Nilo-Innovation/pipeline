@@ -74,8 +74,8 @@ jobs:
     - name: 🔍 Comprobación Python
       run: |
         echo "PATH -> $PATH"
-        which ${{ steps.detect_py.outputs.python_version }}  || echo "❌ ${{ steps.detect_py.outputs.python_version }} NO encontrado"
-        ${{ steps.detect_py.outputs.python_version }} -V      || true
+        which python${{ steps.detect_py.outputs.python_version }}  || echo "❌ python${{ steps.detect_py.outputs.python_version }} NO encontrado"
+        python${{ steps.detect_py.outputs.python_version }} -V      || true
     - uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
