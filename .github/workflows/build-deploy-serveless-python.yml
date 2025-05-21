@@ -46,7 +46,7 @@ jobs:
       if: github.ref == 'refs/heads/qa'
       run: |
         echo "::set-env name=STAGE::qa"
-        echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS__ACCOUNT_ID }}"
+        echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_QA_ACCOUNT_ID }}"
     - name: Set PROD environment variables
       if: github.ref == 'refs/heads/prod'
       run: |
@@ -61,6 +61,16 @@ jobs:
         role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
         role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
     - uses: actions/checkout@v4
+    - name: Detect Python runtime
+      id: detect_py
+      run: |
+        PY_LINE=$(grep -E '^[[:space:]]*runtime:[[:space:]]*python' serverless.yml | head -1)
+        PY_VERSION=${PY_LINE##*python}
+        echo "python_version=$PY_VERSION" >> "$GITHUB_OUTPUT"
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ steps.detect_py.outputs.python_version }}
+        cache: 'pip'  
     - uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
