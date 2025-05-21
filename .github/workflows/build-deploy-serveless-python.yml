@@ -79,9 +79,9 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Install Serverless CLI + python-requirements plugin
+    - name: Install Serverless v3 + plugin
       run: |
-        npm install -g serverless           # CLI global para que npx no descargue cada vez
+        npm install -g serverless@^3
         npx serverless plugin install -n serverless-python-requirements
     - name: Deploy con Serverless CLI
       run: |
