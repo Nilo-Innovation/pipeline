@@ -36,6 +36,15 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
+
+      - name: Install Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Sanity-check python3.11
+        run: python3.11 --version
+
       - name: Set DEV environment variables
         if: github.ref == 'refs/heads/dev'
         run: |
@@ -81,13 +90,14 @@ jobs:
       - name: Terraform Plan
         run: |
           terraform -chdir=$WORKDIR plan \
-            -var "prefix=${{ env.TF_PREFIX }}"
+            -var "prefix=${{ env.TF_PREFIX }}" \
+            -out=tfplan
 
       - name: Terraform Apply
         run: |
           terraform -chdir=$WORKDIR apply \
             -var "prefix=${{ env.TF_PREFIX }}" \
-            -auto-approve
+            -auto-approve tfplan
 
       - name: Checkout Code 
         uses: actions/checkout@v4
