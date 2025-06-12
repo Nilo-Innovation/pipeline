@@ -53,7 +53,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: 🔑 Configure AWS Credentials
-        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/prod'
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/qa'
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
