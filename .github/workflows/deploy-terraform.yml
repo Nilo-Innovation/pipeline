@@ -2,13 +2,13 @@ on:
   workflow_call:
     secrets:
       AWS_DEV_ACCOUNT_ID:
-        required: true
+        required: false
       AWS_QA_ACCOUNT_ID:
-        required: true
+        required: false
       AWS_PIPELINE_ACCESS_KEY_ID:
-        required: true
+        required: false
       AWS_PIPELINE_SECRET_ACCESS_KEY:
-        required: true
+        required: false
 
 
 env:
