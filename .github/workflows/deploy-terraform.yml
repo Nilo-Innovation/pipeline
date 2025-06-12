@@ -76,7 +76,7 @@ jobs:
         run: |
           terraform -chdir=$WORKDIR init \
             -backend-config="bucket=${{ env.BUCKET }}" \
-            -backend-config="key=${{ env.TF_PREFIX }}/terraform.tfstate" \
+            -backend-config="key=${{ env.TF_PREFIX }}" \
 
       - name: Terraform Plan
         run: terraform -chdir=$WORKDIR plan \
