@@ -1,0 +1,101 @@
+on:
+  workflow_call:
+    secrets:
+      AWS_DEV_ACCOUNT_ID:
+        required: true
+      AWS_QA_ACCOUNT_ID:
+        required: true
+      AWS_PIPELINE_ACCESS_KEY_ID:
+        required: true
+      AWS_PIPELINE_SECRET_ACCESS_KEY:
+        required: true
+
+
+env:
+  BUILD_SHA: ${{ github.sha }}
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_PIPELINE_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PIPELINE_SECRET_ACCESS_KEY }}
+  AWS_REGION: us-east-1
+  ROLE_DURATION_SECONDS: 2400
+  AWS_DEFAULT_OUTPUT: json
+  AWS_DEPLOYMENT_ROLE: pipeline
+  ORGANIZATION: lineup
+  TF_IN_AUTOMATION: "true"
+  TF_PREFIX: lineup
+
+jobs:
+  terraform:
+    name: Deploy Terraform to AWS
+    runs-on: ubuntu-latest
+    env:
+      ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+      - name: Set DEV environment variables
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          echo "::set-env name=STAGE::dev"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
+          echo "::set-env name=BUCKET::lineup-datalake-artifacts-dev"
+          echo "::set-env name=WORKDIR::terraform/environments/development"
+      - name: Set QA environment variables
+        if: github.ref == 'refs/heads/qa'
+        run: |
+          echo "::set-env name=STAGE::qa"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_QA_ACCOUNT_ID }}"
+          echo "::set-env name=BUCKET::lineup-datalake-artifacts-qa"
+          echo "::set-env name=WORKDIR::terraform/environments/qa"
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: 🔑 Configure AWS Credentials
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/prod'
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
+          role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
+
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.8.5
+
+      - name: Set working directory
+        run: echo "WORKDIR=${{ env.WORKDIR }}" >> "$GITHUB_ENV"
+
+      - name: Check terraform fmt
+        run: terraform -chdir=$WORKDIR fmt -check -recursive
+
+      - name: Terraform Init
+        run: |
+          terraform -chdir=$WORKDIR init \
+            -backend-config="bucket=${{ env.BUCKET }}" \
+            -backend-config="key=${{ env.TF_PREFIX }}/terraform.tfstate" \
+
+      - name: Terraform Plan
+        run: terraform -chdir=$WORKDIR plan \
+              -var "prefix=${{ env.TF_PREFIX }}" \
+              -out=tfplan
+
+      - name: Terraform Apply
+        run: terraform -chdir=$WORKDIR apply \
+              -var "prefix=${{ env.TF_PREFIX }}" \
+              -auto-approve tfplan
+
+      - name: Checkout Code 
+        uses: actions/checkout@v4
+
+      - name: Notify Slack on Failure
+        if: failure()
+        run: |
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow API-Gateway Deploy ${{ env.SERVICE_NAME }} failed! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Notify Slack on Success
+        if: success()
+        run: |
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow API-Gateway Deploy ${{ env.SERVICE_NAME }} succeeded! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
