@@ -81,14 +81,13 @@ jobs:
       - name: Terraform Plan
         run: |
           terraform -chdir=$WORKDIR plan \
-            -var "prefix=${{ env.TF_PREFIX }}" \
-            -out=tfplan
+            -var "prefix=${{ env.TF_PREFIX }}"
 
       - name: Terraform Apply
         run: |
           terraform -chdir=$WORKDIR apply \
             -var "prefix=${{ env.TF_PREFIX }}" \
-            -auto-approve tfplan
+            -auto-approve
 
       - name: Checkout Code 
         uses: actions/checkout@v4
