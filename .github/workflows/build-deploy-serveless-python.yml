@@ -61,13 +61,6 @@ jobs:
         role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
         role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
     - uses: actions/checkout@v4
-    - name: Detect Python runtime
-      id: detect_py
-      run: |
-        PY_LINE=$(grep -E '^[[:space:]]*runtime:[[:space:]]*python' serverless.yml | head -1)
-        PY_VERSION=${PY_LINE##*python}
-        echo "python_version=$PY_VERSION" >> "$GITHUB_OUTPUT"
-    - uses: actions/checkout@v4
 
     # ---------- Detectar versión de Python en serverless.yml ----------
     - name: Detect Python runtime
