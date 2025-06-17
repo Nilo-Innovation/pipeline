@@ -67,14 +67,33 @@ jobs:
         PY_LINE=$(grep -E '^[[:space:]]*runtime:[[:space:]]*python' serverless.yml | head -1)
         PY_VERSION=${PY_LINE##*python}
         echo "python_version=$PY_VERSION" >> "$GITHUB_OUTPUT"
+    - uses: actions/checkout@v4
+
+    # ---------- Detectar versión de Python en serverless.yml ----------
+    - name: Detect Python runtime
+      id: detect_py
+      run: |
+        PY_LINE=$(grep -E '^[[:space:]]*runtime:[[:space:]]*python' serverless.yml | head -1)
+        PY_VERSION=${PY_LINE##*python}
+        echo "python_version=$PY_VERSION" >> "$GITHUB_OUTPUT"
+
     - uses: actions/setup-python@v5
       with:
         python-version: ${{ steps.detect_py.outputs.python_version }}
+
+    # ---------- Instalar dependencias de Python ----------
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    # ---------- Comprobación de Python (diagnóstico) ----------
     - name: 🔍 Comprobación Python
       run: |
         echo "PATH -> $PATH"
         which python${{ steps.detect_py.outputs.python_version }}  || echo "❌ python${{ steps.detect_py.outputs.python_version }} NO encontrado"
         python${{ steps.detect_py.outputs.python_version }} -V      || true
+
     - uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
