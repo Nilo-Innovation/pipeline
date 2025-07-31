@@ -33,6 +33,11 @@ on:
         required: true
       NEWRELIC:
         required: true
+      NEWRELIC_USER_KEY_JAVA:
+        required: true
+      NEW_RELIC_ACCOUNT_ID:
+        required: true
+
 env:
   BUILD_SHA: ${{ github.sha }}
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
@@ -46,6 +51,8 @@ env:
   SERVICE_NAME: ${{inputs.SERVICE_NAME}}
   SERVICE_PORT: ${{inputs.SERVICE_PORT}}
   NEWRELIC: ${{ secrets.NEWRELIC }}
+  NEWRELIC_USER_KEY_JAVA: ${{ secrets.NEWRELIC_USER_KEY_JAVA }}
+  NEW_RELIC_ACCOUNT_ID: ${{ secrets.NEW_RELIC_ACCOUNT_ID }}
 
 jobs:
   build:
@@ -112,7 +119,7 @@ jobs:
           ./gradlew $SERVICE_NAME:clean
           ./gradlew $SERVICE_NAME:build
           cd $SERVICE_NAME && curl -O https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-java.zip && unzip newrelic-java.zip
-          curl -Ls https://download.newrelic.com/install/newrelic-cli/scripts/install.sh | bash && NEW_RELIC_API_KEY=NRAK-UDG50M4EH7JS925OS7KUVO5ZOHK NEW_RELIC_ACCOUNT_ID=4300341 /usr/local/bin/newrelic install -n logs-integration -y
+          curl -Ls https://download.newrelic.com/install/newrelic-cli/scripts/install.sh | bash && NEW_RELIC_API_KEY=$NEWRELIC_USER_KEY_JAVA NEW_RELIC_ACCOUNT_ID=4300341 /usr/local/bin/newrelic install -n logs-integration -y
       - uses: actions/cache/save@v3
         with: 
           path: ${{  env.SERVICE_NAME  }}/build
