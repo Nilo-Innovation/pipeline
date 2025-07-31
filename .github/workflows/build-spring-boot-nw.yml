@@ -119,7 +119,7 @@ jobs:
           ./gradlew $SERVICE_NAME:clean
           ./gradlew $SERVICE_NAME:build
           cd $SERVICE_NAME && curl -O https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-java.zip && unzip newrelic-java.zip
-          curl -Ls https://download.newrelic.com/install/newrelic-cli/scripts/install.sh | bash && NEW_RELIC_API_KEY=$NEWRELIC_USER_KEY_JAVA NEW_RELIC_ACCOUNT_ID=4300341 /usr/local/bin/newrelic install -n logs-integration -y
+        #  curl -Ls https://download.newrelic.com/install/newrelic-cli/scripts/install.sh | bash && NEW_RELIC_API_KEY=$NEWRELIC_USER_KEY_JAVA NEW_RELIC_ACCOUNT_ID=4300341 /usr/local/bin/newrelic install -n logs-integration -y
       - uses: actions/cache/save@v3
         with: 
           path: ${{  env.SERVICE_NAME  }}/build
