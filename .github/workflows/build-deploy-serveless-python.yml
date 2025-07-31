@@ -97,4 +97,4 @@ jobs:
         npx --yes serverless@3 plugin install -n serverless-newrelic-lambda-layers
     - name: Deploy con Serverless CLI
       run: |
-        npx serverless deploy -s ${{ env.STAGE }} --force
+        npx --yes serverless@3 deploy -s ${{ env.STAGE }} --force
