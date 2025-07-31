@@ -93,8 +93,8 @@ jobs:
     - name: Install Serverless v3 + plugin
       run: |
         npm install -g serverless@^3
-        npx serverless plugin install -n serverless-python-requirements
-        npx serverless plugin install -n serverless-newrelic-lambda-layers
+        npx --yes serverless@3 plugin install -n serverless-python-requirements
+        npx --yes serverless@3 plugin install -n serverless-newrelic-lambda-layers
     - name: Deploy con Serverless CLI
       run: |
         npx serverless deploy -s ${{ env.STAGE }} --force
