@@ -99,6 +99,7 @@ jobs:
     - name: Install Serverless v3 + plugin
       run: |
         npm install -g serverless@^3
+        npm install --save-dev serverless-newrelic-lambda-layers
         npx --yes serverless@3 plugin install -n serverless-python-requirements
         npx --yes serverless@3 plugin install -n serverless-newrelic-lambda-layers
     - name: Deploy con Serverless CLI
