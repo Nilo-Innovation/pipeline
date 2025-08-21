@@ -65,6 +65,7 @@ jobs:
           JAVA_OPTS: "-Xmx300m -Xms250m -XX:MaxMetaspaceSize=200m -XX:MetaspaceSize=130m -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps  -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=1m -Xloggc:/var/log/containers/gc-%t.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/var/log/containers"
         run: |
           echo "::set-env name=STAGE::dev"
+          echo "::set-env name=NEWRELIC_STAGE::development"
           echo "::set-env name=DOCKER_BUILD_TARGET::debug"
           echo "::set-env name=EKS_CLUSTER_NAME::dev-lineup-k8s-cluster"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
@@ -77,6 +78,7 @@ jobs:
           JAVA_OPTS: "-Xmx300m -Xms250m -XX:MaxMetaspaceSize=200m -XX:MetaspaceSize=130m -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps  -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=1m -Xloggc:/var/log/containers/gc-%t.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/var/log/containers"
         run: |
           echo "::set-env name=STAGE::qa"
+          echo "::set-env name=NEWRELIC_STAGE::staging"
           echo "::set-env name=DOCKER_BUILD_TARGET::debug"
           echo "::set-env name=EKS_CLUSTER_NAME::qa-lineup-k8s-cluster"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
@@ -89,6 +91,7 @@ jobs:
           JAVA_OPTS: "-Xmx300m -Xms250m -XX:MaxMetaspaceSize=200m -XX:MetaspaceSize=130m -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps  -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=1m -Xloggc:/var/log/containers/gc-%t.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/var/log/containers"
         run: |
           echo "::set-env name=STAGE::prod"
+          echo "::set-env name=NEWRELIC_STAGE::production"
           echo "::set-env name=DOCKER_BUILD_TARGET::debug"
           echo "::set-env name=EKS_CLUSTER_NAME::prod-lineup-k8s-cluster"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
