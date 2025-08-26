@@ -83,6 +83,17 @@ jobs:
           echo "::set-env name=ALB::${{ secrets.ALB_DEV }}"
           echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
           echo "::set-env name=VPC_CIDR::${{ secrets.VPC_CIDR_DEV }}"
+          echo "::set-env name=HPA_MIN_REPLICAS::1"
+          echo "::set-env name=HPA_MAX_REPLICAS::2"
+          echo "::set-env name=HPA_SD_WINDOW::30"
+          echo "::set-env name=HPA_SU_WINDOW::0"
+          echo "::set-env name=HPA_SD_PERCENT::100"
+          echo "::set-env name=HPA_SU_PERCENT::0"
+          echo "::set-env name=HPA_CPU_TARGET::80"
+          echo "::set-env name=HPA_MEM_TARGET::85"
+          echo "::set-env name=XMX::384m"
+          echo "::set-env name=XMS::256m"
+          echo "::set-env name=MAX_METASPACE::192m"
       - name: Set PROD environment variables
         if: github.ref == 'refs/heads/qa'
         env:
@@ -97,6 +108,17 @@ jobs:
           echo "::set-env name=ALB::${{ secrets.ALB_QA }}"
           echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
           echo "::set-env name=VPC_CIDR::${{ secrets.VPC_CIDR_QA }}"
+          echo "::set-env name=HPA_MIN_REPLICAS::1"
+          echo "::set-env name=HPA_MAX_REPLICAS::3"
+          echo "::set-env name=HPA_SD_WINDOW::60"
+          echo "::set-env name=HPA_SU_WINDOW::15"
+          echo "::set-env name=HPA_SD_PERCENT::100"
+          echo "::set-env name=HPA_SU_PERCENT::75"
+          echo "::set-env name=HPA_CPU_TARGET::75"
+          echo "::set-env name=HPA_MEM_TARGET::80"
+          echo "::set-env name=XMX::700m"
+          echo "::set-env name=XMS::384m"
+          echo "::set-env name=MAX_METASPACE::256m"
       - name: Set PROD environment variables
         if: github.ref == 'refs/heads/prod'
         env:
@@ -111,6 +133,17 @@ jobs:
           echo "::set-env name=ALB::${{ secrets.ALB_PROD }}"
           echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
           echo "::set-env name=VPC_CIDR::${{ secrets.VPC_CIDR_PROD }}"
+          echo "::set-env name=HPA_MIN_REPLICAS::2"
+          echo "::set-env name=HPA_MAX_REPLICAS::8"
+          echo "::set-env name=HPA_SD_WINDOW::300"
+          echo "::set-env name=HPA_SU_WINDOW::15"
+          echo "::set-env name=HPA_SD_PERCENT::50"
+          echo "::set-env name=HPA_SU_PERCENT::50"
+          echo "::set-env name=HPA_CPU_TARGET::70"
+          echo "::set-env name=HPA_MEM_TARGET::80"
+          echo "::set-env name=XMX::700m"
+          echo "::set-env name=XMS::700m"
+          echo "::set-env name=MAX_METASPACE::300m"
       - name: 🔑 Configure AWS Credentials
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/prod'
         uses: aws-actions/configure-aws-credentials@v1
