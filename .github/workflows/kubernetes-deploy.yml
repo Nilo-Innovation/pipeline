@@ -94,10 +94,10 @@ jobs:
           echo "::set-env name=XMX::384m"
           echo "::set-env name=XMS::256m"
           echo "::set-env name=MAX_METASPACE::192m"
-          echo "::set-env name=CPU_REQUEST::50m"
-          echo "::set-env name=MEMORY_REQUEST::64Mi"
-          echo "::set-env name=CPU_LIMIT::500m"
-          echo "::set-env name=MEMORY_LIMIT::256Mi"
+          # echo "::set-env name=CPU_REQUEST::50m"
+          # echo "::set-env name=MEMORY_REQUEST::64Mi"
+          # echo "::set-env name=CPU_LIMIT::500m"
+          # echo "::set-env name=MEMORY_LIMIT::256Mi"
       - name: Set QA environment variables
         if: github.ref == 'refs/heads/qa'
         env:
@@ -123,10 +123,10 @@ jobs:
           echo "::set-env name=XMX::700m"
           echo "::set-env name=XMS::384m"
           echo "::set-env name=MAX_METASPACE::256m"
-          echo "::set-env name=CPU_REQUEST::100m"
-          echo "::set-env name=MEMORY_REQUEST::128Mi"
-          echo "::set-env name=CPU_LIMIT::1"
-          echo "::set-env name=MEMORY_LIMIT::512Mi"
+          # echo "::set-env name=CPU_REQUEST::100m"
+          # echo "::set-env name=MEMORY_REQUEST::128Mi"
+          # echo "::set-env name=CPU_LIMIT::1"
+          # echo "::set-env name=MEMORY_LIMIT::512Mi"
 
       - name: Set PROD environment variables
         if: github.ref == 'refs/heads/prod'
@@ -153,10 +153,10 @@ jobs:
           echo "::set-env name=XMX::700m"
           echo "::set-env name=XMS::700m"
           echo "::set-env name=MAX_METASPACE::300m"
-          echo "::set-env name=CPU_REQUEST::150m"
-          echo "::set-env name=MEMORY_REQUEST::256Mi"
-          echo "::set-env name=CPU_LIMIT::1"
-          echo "::set-env name=MEMORY_LIMIT::512Mi"
+          # echo "::set-env name=CPU_REQUEST::150m"
+          # echo "::set-env name=MEMORY_REQUEST::256Mi"
+          # echo "::set-env name=CPU_LIMIT::1"
+          # echo "::set-env name=MEMORY_LIMIT::512Mi"
       - name: 🔑 Configure AWS Credentials
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/prod'
         uses: aws-actions/configure-aws-credentials@v1
