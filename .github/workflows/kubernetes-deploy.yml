@@ -90,7 +90,7 @@ jobs:
           echo "::set-env name=HPA_SD_PERCENT::100"
           echo "::set-env name=HPA_SU_PERCENT::75"
           echo "::set-env name=HPA_CPU_TARGET::80"
-          echo "::set-env name=HPA_MEM_TARGET::85"
+          echo "::set-env name=HPA_MEM_TARGET::200"
           echo "::set-env name=XMX::384m"
           echo "::set-env name=XMS::256m"
           echo "::set-env name=MAX_METASPACE::192m"
