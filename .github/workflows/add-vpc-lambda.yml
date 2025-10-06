@@ -88,9 +88,9 @@ jobs:
         echo ">>> Prefix   : $PREFIX  (match: ^$PREFIX)"
         echo ">>> Subnets  : $SUBNETS"
         echo ">>> SGs      : $SGS"
-        echo ">>> Apply    : ${{ inputs.apply }}"
-        echo ">>> Attach   : ${{ inputs.attach-policy }}"
-        echo ">>> Wait     : ${{ inputs.wait }}"
+        echo ">>> Apply    : true"
+        echo ">>> Attach   : true"
+        echo ">>> Wait     : false"
         echo
 
         echo "[1/3] Obteniendo funciones Lambda…"
@@ -113,7 +113,7 @@ jobs:
         echo ">> $fn"
 
         # (Opcional) Adjuntar policy al rol de la Lambda
-        if [[ "${{ inputs.attach-policy }}" == "true" ]]; then
+        if [[ "true" == "true" ]]; then
             ROLE_ARN=$(aws lambda get-function-configuration \
                         --function-name "$fn" \
                         --region "$REGION" \
@@ -126,13 +126,13 @@ jobs:
             sleep 5
         fi
 
-        if [[ "${{ inputs.apply }}" == "true" ]]; then
+        if [[ "true" == "true" ]]; then
             aws lambda update-function-configuration \
             --function-name "$fn" \
             --region "$REGION" \
             --vpc-config "SubnetIds=${SUBNETS},SecurityGroupIds=${SGS}"
 
-            if [[ "${{ inputs.wait }}" == "true" ]]; then
+            if [[ "false" == "true" ]]; then
             aws lambda wait function-updated \
                 --function-name "$fn" \
                 --region "$REGION"
