@@ -36,7 +36,7 @@ env:
   NEW_RELIC_INGEST_KEY_LAMBDA: ${{ secrets.NEW_RELIC_INGEST_KEY_LAMBDA }}
 
 jobs:
-  deploy:
+  assign-vpc:
     name: Add VPC to Lambda
     runs-on: ubuntu-latest
     steps:
