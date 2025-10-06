@@ -96,7 +96,15 @@ jobs:
     - name: List Objets
       run: |
         ls -la build/libs
-    - name: serverless deploy
-      uses: Nilo-Innovation/serverless-deploy-lineup@master
-      with:
-        args: deploy -s ${{ env.STAGE }} --force
+    - name: Install Serverless v3 + New Relic plugin
+      run: |
+        npm install -g serverless@^3
+        npx --yes serverless@3 plugin install -n serverless-newrelic-lambda-layers
+
+    - name: 🔍 Preflight (print variables Serverless)
+      run: |
+        npx --yes serverless@3 print --stage "$STAGE" | sed -n '1,200p'
+
+    - name: Deploy con Serverless CLI
+      run: |
+        npx --yes serverless@3 deploy -s "$STAGE" --force
