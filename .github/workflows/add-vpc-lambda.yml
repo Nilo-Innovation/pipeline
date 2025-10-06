@@ -1,0 +1,147 @@
+on:
+  workflow_call:
+    secrets:
+      AWS_DEV_ACCOUNT_ID:
+        required: true
+      AWS_QA_ACCOUNT_ID:
+        required: true
+      AWS_PROD_ACCOUNT_ID:
+        required: true
+      AWS_PIPELINE_ACCESS_KEY_ID:
+        required: true
+      AWS_PIPELINE_SECRET_ACCESS_KEY:
+        required: true
+      PACKAGE_USERNAME:
+        required: true
+      PACKAGE_TOKEN:
+        required: true
+      NEW_RELIC_ACCOUNT_ID:
+        required: true
+      NEW_RELIC_INGEST_KEY_LAMBDA:
+        required: true
+
+env:
+  BUILD_SHA: ${{ github.sha }}
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+  AWS_REGION: us-east-1
+  ROLE_DURATION_SECONDS: 3600
+  AWS_DEFAULT_OUTPUT: json
+  AWS_DEPLOYMENT_ROLE: pipeline
+  ORGANIZATION: lineup
+  GITHUB_USERNAME: ${{ secrets.PACKAGE_USERNAME }}
+  GITHUB_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_PIPELINE_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PIPELINE_SECRET_ACCESS_KEY }}
+  NEW_RELIC_ACCOUNT_ID: ${{ secrets.NEW_RELIC_ACCOUNT_ID }}
+  NEW_RELIC_INGEST_KEY_LAMBDA: ${{ secrets.NEW_RELIC_INGEST_KEY_LAMBDA }}
+
+jobs:
+  deploy:
+    name: Add VPC to Lambda
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set DEV environment variables
+      if: github.ref == 'refs/heads/dev'
+      run: |
+        echo "::set-env name=STAGE::dev"
+        echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
+    - name: Set QA environment variables
+      if: github.ref == 'refs/heads/qa'
+      run: |
+        echo "::set-env name=STAGE::qa"
+        echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_QA_ACCOUNT_ID }}"
+    - name: Set PROD environment variables
+      if: github.ref == 'refs/heads/prod'
+      run: |
+        echo "::set-env name=STAGE::prod"
+        echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
+        echo "::set-env name=SUBNETS::subnet-071c96e3c25dc7295,subnet-0b525635691977be0"
+        echo "::set-env name=SGS::sg-02ceea03a0560da6f"
+        echo "::set-env name=REGION::us-east-1"
+    - name: 🔑 Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
+        role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
+    - uses: actions/checkout@v4
+
+    - name: Assign VPC (AWS CLI only)
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        # Derivar prefijo del repo si no viene override
+        REPO="${GITHUB_REPOSITORY#*/}"
+        DEFAULT_PREFIX="${REPO%%-*}"
+        PREFIX="${{ inputs.prefix }}"
+        [[ -z "$PREFIX" ]] && PREFIX="${DEFAULT_PREFIX:-$REPO}"
+
+        # Validaciones mínimas
+        [[ -z "${REGION:-}"  ]] && { echo "::error:: Falta REGION"; exit 2; }
+        [[ -z "${SUBNETS:-}" ]] && { echo "::error:: Falta SUBNETS (inputs.subnets o VARS.LVA_SUBNETS)"; exit 2; }
+        [[ -z "${SGS:-}"     ]] && { echo "::error:: Falta SGS (inputs.sgs o VARS.LVA_SGS)"; exit 2; }
+
+        echo ">>> Region   : $REGION"
+        echo ">>> Prefix   : $PREFIX  (match: ^$PREFIX)"
+        echo ">>> Subnets  : $SUBNETS"
+        echo ">>> SGs      : $SGS"
+        echo ">>> Apply    : ${{ inputs.apply }}"
+        echo ">>> Attach   : ${{ inputs.attach-policy }}"
+        echo ">>> Wait     : ${{ inputs.wait }}"
+        echo
+
+        echo "[1/3] Obteniendo funciones Lambda…"
+        FUNCS=$(aws lambda list-functions \
+                --region "$REGION" \
+                --query 'Functions[].FunctionName' \
+                --output text | tr '\t' '\n' | grep -i "^$PREFIX" || true)
+
+        if [[ -z "${FUNCS:-}" ]]; then
+        echo "No hay funciones que empiecen con '$PREFIX'."
+        exit 0
+        fi
+
+        echo "Objetivo:"
+        printf ' - %s\n' $FUNCS
+        echo
+
+        echo "[2/3] Actualizando configuración VPC…"
+        for fn in $FUNCS; do
+        echo ">> $fn"
+
+        # (Opcional) Adjuntar policy al rol de la Lambda
+        if [[ "${{ inputs.attach-policy }}" == "true" ]]; then
+            ROLE_ARN=$(aws lambda get-function-configuration \
+                        --function-name "$fn" \
+                        --region "$REGION" \
+                        --query 'Role' --output text)
+            ROLE_NAME="${ROLE_ARN##*/}"
+            aws iam attach-role-policy \
+            --role-name "$ROLE_NAME" \
+            --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole || true
+            # pequeña espera para propagación IAM
+            sleep 5
+        fi
+
+        if [[ "${{ inputs.apply }}" == "true" ]]; then
+            aws lambda update-function-configuration \
+            --function-name "$fn" \
+            --region "$REGION" \
+            --vpc-config "SubnetIds=${SUBNETS},SecurityGroupIds=${SGS}"
+
+            if [[ "${{ inputs.wait }}" == "true" ]]; then
+            aws lambda wait function-updated \
+                --function-name "$fn" \
+                --region "$REGION"
+            fi
+            echo "   ✓ Listo"
+        else
+            echo "   (dry-run) Se actualizaría VPC con SubnetIds=${SUBNETS},SecurityGroupIds=${SGS}"
+        fi
+        done
+
+        echo
+        echo "[3/3] Finalizado."
