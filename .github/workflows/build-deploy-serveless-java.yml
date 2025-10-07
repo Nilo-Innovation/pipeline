@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [14.x]
+        node-version: [18.x]
     steps:
     - name: Set DEV environment variables
       if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/master'
