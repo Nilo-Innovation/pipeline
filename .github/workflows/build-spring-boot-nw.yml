@@ -64,7 +64,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set DEV environment variables
-        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/feature*' || github.ref == 'refs/heads/hotfix*'
         env:
           JAVA_OPTS: "-Xmx300m -Xms250m -XX:MaxMetaspaceSize=200m -XX:MetaspaceSize=130m -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps  -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=1m -Xloggc:/var/log/containers/gc-%t.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/var/log/containers"
         run: |
