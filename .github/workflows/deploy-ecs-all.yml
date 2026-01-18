@@ -65,7 +65,7 @@ jobs:
         run: |
           echo "::set-env name=STAGE::prod"
           echo "::set-env name=DOCKER_BUILD_TARGET::debug"
-          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_QA_ACCOUNT_ID }}"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
           echo "::set-env name=ECS_TASK_DEFINITION_NAME_API::${{ env.ECS_SERVICE_NAME_API }}-prod"
           echo "::set-env name=ECS_CLUSTER_NAME::lineup-prod-ecs"
       - name: 🔑 Configure AWS Credentials
@@ -115,8 +115,8 @@ jobs:
       - name: Notify Slack on Failure
         if: failure()
         run: |
-          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Deploy ECS ${{ env.SERVICE_NAME }} failed! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Deploy ECS ${{ env.SERVICE_NAME }}-${{ github.ref_name }} failed! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
       - name: Notify Slack on Success
         if: success()
         run: |
-          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Deploy ECS ${{ env.SERVICE_NAME }} succeeded! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Deploy ECS ${{ env.SERVICE_NAME }}-${{ github.ref_name }} succeeded! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
