@@ -49,28 +49,34 @@ jobs:
   build-deploy:
     name: Build & Deploy
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18.x]
     steps:
     - name: Set DEV environment variables
       if: github.ref == 'refs/heads/dev'
       run: |
         echo "::set-env name=STAGE::dev"
         echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
-        echo "::set-env name=LAMBDA_ROLE_ARNE::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID }}:role/lineup-lambda-queueit"
+        echo "::set-env name=LAMBDA_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID }}:role/lineup-lambda-queueit"
+        echo "::set-env name=QUEUEIT_SECRET_KEY::${{ secrets.QUEUEIT_SECRET_KEY_DEV }}"
+        echo "::set-env name=QUEUEIT_API_KEY::${{ secrets.QUEUEIT_API_KEY_DEV }}"
+        echo "::set-env name=QUEUEIT_CUSTOMER_ID::${{ secrets.QUEUEIT_CUSTOMER_ID_DEV }}"
     - name: Set QA environment variables
       if: github.ref == 'refs/heads/qa'
       run: |
         echo "::set-env name=STAGE::qa"
         echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_QA_ACCOUNT_ID }}"
-        echo "::set-env name=LAMBDA_ROLE_ARNE::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID }}:role/lineup-lambda-queueit"
+        echo "::set-env name=LAMBDA_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID }}:role/lineup-lambda-queueit"
+        echo "::set-env name=QUEUEIT_SECRET_KEY::${{ secrets.QUEUEIT_SECRET_KEY_QA }}"
+        echo "::set-env name=QUEUEIT_API_KEY::${{ secrets.QUEUEIT_API_KEY_QA }}"
+        echo "::set-env name=QUEUEIT_CUSTOMER_ID::${{ secrets.QUEUEIT_CUSTOMER_ID_QA }}"
     - name: Set PROD environment variables
       if: github.ref == 'refs/heads/prod'
       run: |
         echo "::set-env name=STAGE::prod"
         echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
-        echo "::set-env name=LAMBDA_ROLE_ARNE::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID }}:role/lineup-lambda-queueit"
+        echo "::set-env name=LAMBDA_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID }}:role/lineup-lambda-queueit"
+        echo "::set-env name=QUEUEIT_SECRET_KEY::${{ secrets.QUEUEIT_SECRET_KEY_PROD }}"
+        echo "::set-env name=QUEUEIT_API_KEY::${{ secrets.QUEUEIT_API_KEY_PROD }}"
+        echo "::set-env name=QUEUEIT_CUSTOMER_ID::${{ secrets.QUEUEIT_CUSTOMER_ID_PROD }}"
     - name: 🔑 Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -88,6 +94,54 @@ jobs:
 
     - name: Install dependencies
       run: npm ci
+
+    - name: Inject Queue-it values into ViewerRequest/environmentvariables.json
+      shell: bash
+      env:
+        QUEUEIT_SECRET_KEY: ${{ env.QUEUEIT_SECRET_KEY }}
+        QUEUEIT_API_KEY: ${{ env.QUEUEIT_API_KEY }}
+        QUEUEIT_CUSTOMER_ID: ${{ env.QUEUEIT_CUSTOMER_ID }}
+      run: |
+        set -euo pipefail
+
+        # Valida secrets obligatorios
+        [ -n "${QUEUEIT_SECRET_KEY}" ] || (echo "Falta secret QUEUEIT_SECRET_KEY" && exit 1)
+        [ -n "${QUEUEIT_API_KEY}" ] || (echo "Falta secret QUEUEIT_API_KEY" && exit 1)
+        [ -n "${QUEUEIT_CUSTOMER_ID}" ] || (echo "Falta secret QUEUEIT_CUSTOMER_ID" && exit 1)
+
+        python3 - <<'PY'
+        import json, os
+
+        path = "ViewerRequest/environmentvariables.json"
+
+        def parse_bool(v, default):
+            if v is None or str(v).strip() == "":
+                v = default
+            return str(v).strip().lower() in ("1", "true", "yes", "y", "on")
+
+        def parse_int(v, default):
+            if v is None or str(v).strip() == "":
+                v = default
+            return int(str(v).strip())
+
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        # Obligatorios
+        data["QUEUEIT_SECRET_KEY"] = os.environ["QUEUEIT_SECRET_KEY"]
+        data["QUEUEIT_API_KEY"] = os.environ["QUEUEIT_API_KEY"]
+        data["QUEUEIT_CUSTOMER_ID"] = os.environ["QUEUEIT_CUSTOMER_ID"]
+
+        # Opcionales con default
+        data["QUEUEIT_ENQT_ENABLED"] = parse_bool(os.getenv("QUEUEIT_ENQT_ENABLED"), "true")
+        data["QUEUEIT_ENQT_VALIDITY_TIME"] = parse_int(os.getenv("QUEUEIT_ENQT_VALIDITY_TIME"), "240000")
+        data["QUEUEIT_ENQT_KEY_ENABLED"] = parse_bool(os.getenv("QUEUEIT_ENQT_KEY_ENABLED"), "false")
+
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+            f.write("\n")
+        PY
+
 
     - name: Build Queue-it artifacts
       run: npm run buildArtifacts
@@ -231,3 +285,12 @@ jobs:
         name: ViewerResponse-zip
         path: dist/ViewerResponse.zip
         retention-days: 3
+
+    - name: Notify Slack on Failure
+      if: failure()
+      run: |
+        curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Lambda Queueit ${{ github.ref_name }} failed! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/lineup-queueit-connector/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
+    - name: Notify Slack on Success
+      if: success()
+      run: |
+        curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Lambda Queueit ${{ github.ref_name }} succeeded! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/lineup-queueit-connector/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
