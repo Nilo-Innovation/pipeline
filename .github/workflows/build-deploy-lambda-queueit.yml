@@ -46,8 +46,8 @@ env:
 
 
 jobs:
-  build:
-    name: Build
+  build-deploy:
+    name: Build & Deploy
     runs-on: ubuntu-latest
     strategy:
       matrix:
