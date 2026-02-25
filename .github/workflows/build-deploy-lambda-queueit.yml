@@ -19,6 +19,24 @@ on:
         required: true
       NEW_RELIC_INGEST_KEY_LAMBDA:
         required: true
+      QUEUEIT_SECRET_KEY_DEV:
+        required: false
+      QUEUEIT_SECRET_KEY_QA:
+        required: false
+      QUEUEIT_SECRET_KEY_PROD:
+        required: false
+      QUEUEIT_API_KEY_DEV:
+        required: false
+      QUEUEIT_API_KEY_QA:
+        required: false
+      QUEUEIT_API_KEY_PROD:
+        required: false
+      QUEUEIT_CUSTOMER_ID_DEV:
+        required: false
+      QUEUEIT_CUSTOMER_ID_QA:
+        required: false
+      QUEUEIT_CUSTOMER_ID_PROD:
+        required: false
 
 env:
   BUILD_SHA: ${{ github.sha }}
@@ -55,7 +73,7 @@ jobs:
       run: |
         echo "::set-env name=STAGE::dev"
         echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
-        echo "::set-env name=LAMBDA_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID }}:role/lineup-lambda-queueit"
+        echo "::set-env name=LAMBDA_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_DEV_ACCOUNT_ID }}:role/lineup-lambda-queueit"
         echo "::set-env name=QUEUEIT_SECRET_KEY::${{ secrets.QUEUEIT_SECRET_KEY_DEV }}"
         echo "::set-env name=QUEUEIT_API_KEY::${{ secrets.QUEUEIT_API_KEY_DEV }}"
         echo "::set-env name=QUEUEIT_CUSTOMER_ID::${{ secrets.QUEUEIT_CUSTOMER_ID_DEV }}"
@@ -64,7 +82,7 @@ jobs:
       run: |
         echo "::set-env name=STAGE::qa"
         echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_QA_ACCOUNT_ID }}"
-        echo "::set-env name=LAMBDA_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID }}:role/lineup-lambda-queueit"
+        echo "::set-env name=LAMBDA_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_QA_ACCOUNT_ID }}:role/lineup-lambda-queueit"
         echo "::set-env name=QUEUEIT_SECRET_KEY::${{ secrets.QUEUEIT_SECRET_KEY_QA }}"
         echo "::set-env name=QUEUEIT_API_KEY::${{ secrets.QUEUEIT_API_KEY_QA }}"
         echo "::set-env name=QUEUEIT_CUSTOMER_ID::${{ secrets.QUEUEIT_CUSTOMER_ID_QA }}"
