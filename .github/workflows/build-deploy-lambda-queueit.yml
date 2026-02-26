@@ -299,12 +299,25 @@ jobs:
 
           if [[ "${PUBLISH_VERSION}" == "true" ]]; then
             echo "Publicando versión..."
-            aws lambda publish-version \
-              --region "${AWS_REGION}" \
-              --function-name "${fn_name}" \
-              --description "GitHub Actions ${GITHUB_SHA}" >/dev/null
 
-            echo "✅ Versión publicada para ${fn_name}"
+            # Retry corto por si AWS sigue estabilizando internamente
+            for intento in 1 2 3 4 5; do
+              if aws lambda publish-version \
+                --region "${AWS_REGION}" \
+                --function-name "${fn_name}" \
+                --description "GitHub Actions ${GITHUB_SHA}" >/dev/null; then
+                echo "✅ Versión publicada para ${fn_name}"
+                break
+              fi
+
+              if [[ "${intento}" -eq 5 ]]; then
+                echo "❌ No se pudo publicar versión para ${fn_name}"
+                exit 1
+              fi
+
+              echo "⚠️ Aún no lista para publish (intento ${intento}), reintentando..."
+              sleep $((intento * 2))
+            done
           fi
         }
 
