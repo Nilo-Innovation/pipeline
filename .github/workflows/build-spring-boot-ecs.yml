@@ -101,6 +101,7 @@ jobs:
           echo 'service name ' ${{inputs.SERVICE_NAME}}
           ./gradlew clean :monolith-app:build
           ls -la
+          ls -la ./build
       - uses: actions/cache/save@v3
         with: 
           path: ${{  env.SERVICE_NAME  }}/build
