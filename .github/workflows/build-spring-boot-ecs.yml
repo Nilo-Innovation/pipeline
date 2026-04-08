@@ -1,0 +1,145 @@
+on:
+  workflow_call:
+    inputs:
+      SERVICE_NAME:
+        required: true
+        type: string
+      SERVICE_PORT:
+        required: true
+        type: string
+      PATH_SERVICE:
+        required: false
+        type: string
+    secrets:
+      ALB_DEV:
+        required: true
+      ALB_QA:
+        required: true
+      ALB_PROD:
+        required: true
+      AWS_DEV_ACCOUNT_ID:
+        required: true
+      AWS_QA_ACCOUNT_ID:
+        required: true
+      AWS_PROD_ACCOUNT_ID:
+        required: true
+      AWS_PIPELINE_ACCESS_KEY_ID:
+        required: true
+      AWS_PIPELINE_SECRET_ACCESS_KEY:
+        required: true
+      PACKAGE_USERNAME:
+        required: true
+      PACKAGE_TOKEN:
+        required: true
+      NEWRELIC:
+        required: true
+      NEWRELIC_USER_KEY_JAVA:
+        required: true
+      NEW_RELIC_ACCOUNT_ID:
+        required: true
+
+env:
+  BUILD_SHA: ${{ github.sha }}
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_PIPELINE_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PIPELINE_SECRET_ACCESS_KEY }}
+  AWS_REGION: us-east-1
+  ROLE_DURATION_SECONDS: 1200
+  AWS_DEFAULT_OUTPUT: json
+  AWS_DEPLOYMENT_ROLE: pipeline
+  ORGANIZATION: lineup
+  SERVICE_NAME: ${{inputs.SERVICE_NAME}}
+  SERVICE_PORT: ${{inputs.SERVICE_PORT}}
+  NEWRELIC: ${{ secrets.NEWRELIC }}
+  NEWRELIC_USER_KEY_JAVA: ${{ secrets.NEWRELIC_USER_KEY_JAVA }}
+  NEW_RELIC_ACCOUNT_ID: ${{ secrets.NEW_RELIC_ACCOUNT_ID }}
+
+jobs:
+  build:
+    name: Build Docker Images
+    #runs-on: [self-hosted, prod]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set DEV environment variables
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/feature*' || github.ref == 'refs/heads/hotfix*'
+        run: |
+          echo "::set-env name=STAGE::dev"
+          echo "::set-env name=DOCKER_BUILD_TARGET::debug"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
+          echo "::set-env name=ALB::${{ secrets.ALB_DEV }}"
+          echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
+      - name: Set PROD environment variables
+        if: github.ref == 'refs/heads/qa'
+        run: |
+          echo "::set-env name=STAGE::qa"
+          echo "::set-env name=DOCKER_BUILD_TARGET::debug"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_QA_ACCOUNT_ID }}"
+          echo "::set-env name=ALB::${{ secrets.ALB_QA }}"
+          echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
+      - name: Set PROD environment variables
+        if: github.ref == 'refs/heads/prod'
+        run: |
+          echo "::set-env name=STAGE::prod"
+          echo "::set-env name=DOCKER_BUILD_TARGET::debug"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
+          echo "::set-env name=ALB::${{ secrets.ALB_PROD }}"
+          echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
+      - name: ☕ Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: 11
+      # - name: 🐘 Stop Gradle Daemon(s)
+      #   uses: eskatos/gradle-command-action@v1.4
+      #   env:
+      #     GRADLE_OPTS: -Xmx2000m -XX:MaxPermSize=256m -Dorg.gradle.jvmargs='-Xmx2048m -XX:MaxPermSize=256m'
+      #   with:
+      #     arguments: --stop
+      #     gradle-version: 7.4.2
+      - name: 🐘 Build Repository With Gradle
+        env:
+          GITHUB_USERNAME: ${{ secrets.PACKAGE_USERNAME }}
+          GITHUB_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
+        run: |
+          echo $SERVICE_NAME
+          echo 'service name ' ${{inputs.SERVICE_NAME}}
+          ./gradlew clean :monolith-app:build
+      - uses: actions/cache/save@v3
+        with: 
+          path: ${{  env.SERVICE_NAME  }}/build
+          key: ${{ runner.os }}-gradlew-${{  env.SERVICE_NAME  }}-${{ github.sha }}
+      - name: 🔑 Configure AWS Credentials
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/prod'
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
+          role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
+      - name: 🔓 Login to Amazon ECR
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/prod'
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: 🏗️ Build, Tag, and Push Images to Amazon ECR
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod' || github.ref == 'refs/heads/qa'
+        env:
+          IMAGE_TAG: latest
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          DOCKER_BUILD_TARGET: ${{ env.DOCKER_BUILD_TARGET }}
+          ECR_TARGET: ${{ format('{0}.dkr.ecr.us-east-1.amazonaws.com/{1}-{2}/{3}:latest',env.AWS_ACCOUNT_ID, env.STAGE, env.ORGANIZATION, env.SERVICE_NAME ) }}
+        run: |
+          docker buildx build --platform linux/amd64 -t $ECR_TARGET --push $SERVICE_NAME
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Notify Slack on Failure
+        if: failure()
+        run: |
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Build Spring Boot Deploy ${{ env.SERVICE_NAME }}-${{ github.ref_name }} failed! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Notify Slack on Success
+        if: success()
+        run: |
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Build Spring Boot Deploy ${{ env.SERVICE_NAME }}-${{ github.ref_name }} succeeded! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
