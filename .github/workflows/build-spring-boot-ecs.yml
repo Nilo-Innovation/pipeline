@@ -91,7 +91,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'corretto'
-          java-version: 24
+          java-version: 17
       - name: 🐘 Build Repository With Gradle
         env:
           GITHUB_USERNAME: ${{ secrets.PACKAGE_USERNAME }}
