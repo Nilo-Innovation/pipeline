@@ -150,7 +150,7 @@ jobs:
           echo "::set-env name=NAMESPACE::${{ secrets.NAMESPACE_DEV }}"
           echo "::set-env name=APPLICATION_LOAD_BALANCER_ARN::${{ secrets.APPLICATION_LOAD_BALANCER_ARN_DEV }}"
           echo "::set-env name=VPC_ID::${{ secrets.VPC_CIDR_DEV }}"
-          echo "SUBNET_IDS=${{ secrets.SUBNET_IDS_DEV }}" >> $GITHUB_ENV
+          echo "::set-env name=SUBNET_IDS_CSV::${{ secrets.SUBNET_IDS_DEV }}"
           echo "::set-env name=TASK_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_DEV_ACCOUNT_ID }}:role/${{ inputs.TASK_ROLE_NAME }}"
           echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_DEV_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
           echo "::set-env name=SUBNET_PREFIX::eksctl-dev-lineup-k8s-cluster-cluster/SubnetPublic"
@@ -166,7 +166,7 @@ jobs:
           echo "::set-env name=NAMESPACE::${{ secrets.NAMESPACE_QA }}"
           echo "::set-env name=APPLICATION_LOAD_BALANCER_ARN::${{ secrets.APPLICATION_LOAD_BALANCER_ARN_QA }}"
           echo "::set-env name=VPC_ID::${{ secrets.VPC_CIDR_QA }}"
-          echo "SUBNET_IDS=${{ secrets.SUBNET_IDS_QA }}" >> $GITHUB_ENV
+          echo "::set-env name=SUBNET_IDS_CSV::${{ secrets.SUBNET_IDS_QA }}"
           echo "::set-env name=TASK_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_QA_ACCOUNT_ID }}:role/${{ inputs.TASK_ROLE_NAME }}"
           echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_QA_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
           echo "::set-env name=SUBNET_PREFIX::eksctl-qa-lineup-k8s-cluster-cluster/SubnetPublic"
@@ -182,7 +182,7 @@ jobs:
           echo "::set-env name=NAMESPACE::${{ secrets.NAMESPACE_PROD }}"
           echo "::set-env name=APPLICATION_LOAD_BALANCER_ARN::${{ secrets.APPLICATION_LOAD_BALANCER_ARN_PROD }}"
           echo "::set-env name=VPC_ID::${{ secrets.VPC_CIDR_PROD }}"
-          echo "SUBNET_IDS=${{ secrets.SUBNET_IDS_PROD }}" >> $GITHUB_ENV
+          echo "::set-env name=SUBNET_IDS_CSV::${{ secrets.SUBNET_IDS_PROD }}"
           echo "::set-env name=TASK_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID }}:role/${{ inputs.TASK_ROLE_NAME }}"
           echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
           echo "::set-env name=SUBNET_PREFIX::eksctl-prod-lineup-eks-cluster/SubnetPrivate"
@@ -228,7 +228,7 @@ jobs:
           sed -i "s|DESIRED_COUNT|${{ env.DESIRED_COUNT }}|g" ./terraform/terraform.tfvars
           sed -i "s|SUBNET_PREFIX|${{ env.SUBNET_PREFIX }}|g" ./terraform/terraform.tfvars
           sed -i "s|VPC_ID|${{ env.VPC_ID }}|g" ./terraform/terraform.tfvars
-          sed -i "s|SUBNET_IDS|${{ env.SUBNET_IDS }}|g" ./terraform/terraform.tfvars
+          sed -i "s|SUBNET_IDS_CSV|${{ env.SUBNET_IDS_CSV }}|g" ./terraform/terraform.tfvars
           sed -i "s|LISTENER_PATH_PATTERNS|${{ env.LISTENER_PATH_PATTERNS }}|g" ./terraform/terraform.tfvars
           sed -i "s|LOG_RETENTION_IN_DAYS|${{ env.LOG_RETENTION_IN_DAYS }}|g" ./terraform/terraform.tfvars
 
