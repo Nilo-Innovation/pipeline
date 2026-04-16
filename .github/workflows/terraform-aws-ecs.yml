@@ -11,9 +11,6 @@ on:
         required: false
         type: string
 
-      TFSTATE_BUCKET_DEV:
-        required: true
-        type: string
       TFSTATE_BUCKET_QA:
         required: true
         type: string
@@ -26,9 +23,6 @@ on:
         type: string
         default: latest
 
-      ECS_CLUSTER_NAME_DEV:
-        required: true
-        type: string
       ECS_CLUSTER_NAME_QA:
         required: true
         type: string
@@ -36,9 +30,6 @@ on:
         required: true
         type: string
 
-      NAMESPACE_DEV:
-        required: true
-        type: string
       NAMESPACE_QA:
         required: true
         type: string
@@ -46,9 +37,6 @@ on:
         required: true
         type: string
 
-      APPLICATION_LOAD_BALANCER_ARN_DEV:
-        required: true
-        type: string
       APPLICATION_LOAD_BALANCER_ARN_QA:
         required: true
         type: string
@@ -95,10 +83,6 @@ on:
         type: string
         default: ecsTaskExecutionRole
 
-      VPC_ID_DEV:
-        required: false
-        type: string
-        default: ""
       VPC_ID_QA:
         required: false
         type: string
@@ -108,10 +92,6 @@ on:
         type: string
         default: ""
 
-      SUBNET_IDS_DEV:
-        required: false
-        type: string
-        default: "[]"
       SUBNET_IDS_QA:
         required: false
         type: string
