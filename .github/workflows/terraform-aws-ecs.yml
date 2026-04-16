@@ -102,6 +102,13 @@ on:
       VPC_CIDR_PROD:
         required: false
 
+      VPC_DEV:
+        required: false
+      VPC_QA:
+        required: false
+      VPC_PROD:
+        required: false
+
       SUBNET_IDS_DEV:
         required: false
       SUBNET_IDS_QA:
@@ -149,7 +156,7 @@ jobs:
           echo "::set-env name=ECS_CLUSTER_NAME::${{ secrets.ECS_CLUSTER_NAME_DEV }}"
           echo "::set-env name=NAMESPACE::${{ secrets.NAMESPACE_DEV }}"
           echo "::set-env name=APPLICATION_LOAD_BALANCER_ARN::${{ secrets.APPLICATION_LOAD_BALANCER_ARN_DEV }}"
-          echo "::set-env name=VPC_ID::${{ secrets.VPC_CIDR_DEV }}"
+          echo "::set-env name=VPC_ID::${{ secrets.VPC_DEV }}"
           echo "::set-env name=SUBNET_IDS_CSV::${{ secrets.SUBNET_IDS_DEV }}"
           echo "::set-env name=TASK_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_DEV_ACCOUNT_ID }}:role/${{ inputs.TASK_ROLE_NAME }}"
           echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_DEV_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
@@ -165,7 +172,7 @@ jobs:
           echo "::set-env name=ECS_CLUSTER_NAME::${{ secrets.ECS_CLUSTER_NAME_QA }}"
           echo "::set-env name=NAMESPACE::${{ secrets.NAMESPACE_QA }}"
           echo "::set-env name=APPLICATION_LOAD_BALANCER_ARN::${{ secrets.APPLICATION_LOAD_BALANCER_ARN_QA }}"
-          echo "::set-env name=VPC_ID::${{ secrets.VPC_CIDR_QA }}"
+          echo "::set-env name=VPC_ID::${{ secrets.VPC_QA }}"
           echo "::set-env name=SUBNET_IDS_CSV::${{ secrets.SUBNET_IDS_QA }}"
           echo "::set-env name=TASK_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_QA_ACCOUNT_ID }}:role/${{ inputs.TASK_ROLE_NAME }}"
           echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_QA_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
@@ -181,7 +188,7 @@ jobs:
           echo "::set-env name=ECS_CLUSTER_NAME::${{ secrets.ECS_CLUSTER_NAME_PROD }}"
           echo "::set-env name=NAMESPACE::${{ secrets.NAMESPACE_PROD }}"
           echo "::set-env name=APPLICATION_LOAD_BALANCER_ARN::${{ secrets.APPLICATION_LOAD_BALANCER_ARN_PROD }}"
-          echo "::set-env name=VPC_ID::${{ secrets.VPC_CIDR_PROD }}"
+          echo "::set-env name=VPC_ID::${{ secrets.VPC_PROD }}"
           echo "::set-env name=SUBNET_IDS_CSV::${{ secrets.SUBNET_IDS_PROD }}"
           echo "::set-env name=TASK_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID }}:role/${{ inputs.TASK_ROLE_NAME }}"
           echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
