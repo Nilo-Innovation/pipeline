@@ -30,11 +30,6 @@ on:
         type: string
         default: "1"
 
-      LISTENER_PATH_PATTERNS:
-        required: false
-        type: string
-        default: '["/*"]'
-
       LOG_RETENTION_IN_DAYS:
         required: false
         type: string
