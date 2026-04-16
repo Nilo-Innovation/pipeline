@@ -11,50 +11,10 @@ on:
         required: false
         type: string
 
-      TFSTATE_BUCKET_DEV:
-        required: false
-        type: string
-      TFSTATE_BUCKET_QA:
-        required: true
-        type: string
-      TFSTATE_BUCKET_PROD:
-        required: true
-        type: string
-
       IMAGE_TAG:
         required: false
         type: string
         default: latest
-
-      ECS_CLUSTER_NAME_DEV:
-        required: false
-        type: string
-      ECS_CLUSTER_NAME_QA:
-        required: true
-        type: string
-      ECS_CLUSTER_NAME_PROD:
-        required: true
-        type: string
-
-      NAMESPACE_DEV:
-        required: false
-        type: string
-      NAMESPACE_QA:
-        required: true
-        type: string
-      NAMESPACE_PROD:
-        required: true
-        type: string
-
-      APPLICATION_LOAD_BALANCER_ARN_DEV:
-        required: false
-        type: string
-      APPLICATION_LOAD_BALANCER_ARN_QA:
-        required: true
-        type: string
-      APPLICATION_LOAD_BALANCER_ARN_PROD:
-        required: true
-        type: string
 
       LISTENER_RULE_PRIORITY:
         required: true
@@ -138,6 +98,33 @@ on:
         required: true
       SLACK_WEBHOOK_URL:
         required: true
+      TFSTATE_BUCKET_DEV:
+        required: false
+      TFSTATE_BUCKET_QA:
+        required: false
+      TFSTATE_BUCKET_PROD:
+        required: false
+
+      ECS_CLUSTER_NAME_DEV:
+        required: false
+      ECS_CLUSTER_NAME_QA:
+        required: false
+      ECS_CLUSTER_NAME_PROD:
+        required: false
+
+      NAMESPACE_DEV:
+        required: false
+      NAMESPACE_QA:
+        required: false
+      NAMESPACE_PROD:
+        required: false
+
+      APPLICATION_LOAD_BALANCER_ARN_DEV:
+        required: false
+      APPLICATION_LOAD_BALANCER_ARN_QA:
+        required: false
+      APPLICATION_LOAD_BALANCER_ARN_PROD:
+        required: false
 
 env:
   BUILD_SHA: ${{ github.sha }}
@@ -150,7 +137,6 @@ env:
   AWS_DEPLOYMENT_ROLE: pipeline
   ORGANIZATION: lineup
   SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
-  TFSTATE_BUCKET: ${{ inputs.TFSTATE_BUCKET }}
   IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
   LISTENER_RULE_PRIORITY: ${{ inputs.LISTENER_RULE_PRIORITY }}
   HEALTH_CHECK_PATH: ${{ inputs.HEALTH_CHECK_PATH }}
