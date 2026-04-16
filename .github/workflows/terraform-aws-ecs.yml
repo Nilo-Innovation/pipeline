@@ -157,6 +157,7 @@ jobs:
           echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_DEV_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
           echo "::set-env name=SUBNET_PREFIX::eksctl-dev-lineup-k8s-cluster-cluster/SubnetPublic"
           echo "::set-env name=DESIRED_COUNT::1"
+          echo "::set-env name=ENV_FILE_S3_BUCKET::lineup-variables-services-dev"
 
       - name: Set QA environment variables
         if: github.ref == 'refs/heads/qa'
@@ -174,6 +175,7 @@ jobs:
           echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_QA_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
           echo "::set-env name=SUBNET_PREFIX::eksctl-qa-lineup-k8s-cluster-cluster/SubnetPublic"
           echo "::set-env name=DESIRED_COUNT::1"
+          echo "::set-env name=ENV_FILE_S3_BUCKET::lineup-variables-services-qa"
           
 
       - name: Set PROD environment variables
@@ -192,6 +194,7 @@ jobs:
           echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
           echo "::set-env name=SUBNET_PREFIX::eksctl-prod-lineup-eks-cluster/SubnetPrivate"
           echo "::set-env name=DESIRED_COUNT::2"
+          echo "::set-env name=ENV_FILE_S3_BUCKET::lineup-variables-services-prod"
 
       - name: 🔑 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -237,6 +240,7 @@ jobs:
           sed -i "s|SUBNET_IDS_CSV|${{ env.SUBNET_IDS_CSV }}|g" ./terraform/terraform.tfvars
           sed -i "s|LISTENER_PATH_PATTERNS|${{ env.LISTENER_PATH_PATTERNS }}|g" ./terraform/terraform.tfvars
           sed -i "s|LOG_RETENTION_IN_DAYS|${{ env.LOG_RETENTION_IN_DAYS }}|g" ./terraform/terraform.tfvars
+          sed -i "s|ENV_FILE_S3_BUCKET|${{ env.ENV_FILE_S3_BUCKET }}|g" ./terraform/terraform.tfvars
 
           sed -i "s|SERVICE_NAME|${{ env.SERVICE_NAME }}|g" ./terraform/variables.tf
 
