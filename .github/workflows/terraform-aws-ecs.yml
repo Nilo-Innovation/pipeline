@@ -11,6 +11,9 @@ on:
         required: false
         type: string
 
+      TFSTATE_BUCKET_DEV:
+        required: false
+        type: string
       TFSTATE_BUCKET_QA:
         required: true
         type: string
@@ -23,6 +26,9 @@ on:
         type: string
         default: latest
 
+      ECS_CLUSTER_NAME_DEV:
+        required: false
+        type: string
       ECS_CLUSTER_NAME_QA:
         required: true
         type: string
@@ -30,6 +36,9 @@ on:
         required: true
         type: string
 
+      NAMESPACE_DEV:
+        required: false
+        type: string
       NAMESPACE_QA:
         required: true
         type: string
@@ -37,6 +46,9 @@ on:
         required: true
         type: string
 
+      APPLICATION_LOAD_BALANCER_ARN_DEV:
+        required: false
+        type: string
       APPLICATION_LOAD_BALANCER_ARN_QA:
         required: true
         type: string
@@ -58,11 +70,6 @@ on:
         type: string
         default: "1"
 
-      SUBNET_PREFIX:
-        required: false
-        type: string
-        default: private
-
       LISTENER_PATH_PATTERNS:
         required: false
         type: string
@@ -83,6 +90,10 @@ on:
         type: string
         default: ecsTaskExecutionRole
 
+      VPC_ID_DEV:
+        required: false
+        type: string
+        default: ""
       VPC_ID_QA:
         required: false
         type: string
@@ -92,6 +103,10 @@ on:
         type: string
         default: ""
 
+      SUBNET_IDS_DEV:
+        required: false
+        type: string
+        default: "[]"
       SUBNET_IDS_QA:
         required: false
         type: string
@@ -140,7 +155,6 @@ env:
   LISTENER_RULE_PRIORITY: ${{ inputs.LISTENER_RULE_PRIORITY }}
   HEALTH_CHECK_PATH: ${{ inputs.HEALTH_CHECK_PATH }}
   DESIRED_COUNT: ${{ inputs.DESIRED_COUNT }}
-  SUBNET_PREFIX: ${{ inputs.SUBNET_PREFIX }}
   LISTENER_PATH_PATTERNS: ${{ inputs.LISTENER_PATH_PATTERNS }}
   LOG_RETENTION_IN_DAYS: ${{ inputs.LOG_RETENTION_IN_DAYS }}
   TASK_ROLE_NAME: ${{ inputs.TASK_ROLE_NAME }}
@@ -170,6 +184,7 @@ jobs:
           echo "::set-env name=SUBNET_IDS::${{ inputs.SUBNET_IDS_DEV }}"
           echo "::set-env name=TASK_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_DEV_ACCOUNT_ID }}:role/${{ inputs.TASK_ROLE_NAME }}"
           echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_DEV_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
+          echo "::set-env name=SUBNET_PREFIX::public"
 
       - name: Set QA environment variables
         if: github.ref == 'refs/heads/qa'
@@ -185,6 +200,7 @@ jobs:
           echo "::set-env name=SUBNET_IDS::${{ inputs.SUBNET_IDS_QA }}"
           echo "::set-env name=TASK_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_QA_ACCOUNT_ID }}:role/${{ inputs.TASK_ROLE_NAME }}"
           echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_QA_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
+          echo "::set-env name=SUBNET_PREFIX::public"
 
       - name: Set PROD environment variables
         if: github.ref == 'refs/heads/prod'
@@ -200,6 +216,7 @@ jobs:
           echo "::set-env name=SUBNET_IDS::${{ inputs.SUBNET_IDS_PROD }}"
           echo "::set-env name=TASK_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID }}:role/${{ inputs.TASK_ROLE_NAME }}"
           echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
+          echo "::set-env name=SUBNET_PREFIX::private"
 
       - name: 🔑 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
