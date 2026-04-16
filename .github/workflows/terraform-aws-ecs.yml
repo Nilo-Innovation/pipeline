@@ -272,6 +272,11 @@ jobs:
         working-directory: terraform
         run: terraform validate
 
+      - name: Show terraform.tfvars
+        run: |
+          echo "===== terraform.tfvars ====="
+          cat ./terraform/terraform.tfvars
+
       - name: Terraform Apply
         working-directory: terraform
         run: terraform apply -auto-approve
