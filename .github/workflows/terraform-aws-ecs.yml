@@ -165,7 +165,7 @@ jobs:
           echo "::set-env name=SUBNET_IDS::${{ inputs.SUBNET_IDS_DEV }}"
           echo "::set-env name=TASK_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_DEV_ACCOUNT_ID }}:role/${{ inputs.TASK_ROLE_NAME }}"
           echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_DEV_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
-          echo "::set-env name=SUBNET_PREFIX::public"
+          echo "::set-env name=SUBNET_PREFIX::eksctl-dev-lineup-k8s-cluster-cluster/SubnetPublic"
 
       - name: Set QA environment variables
         if: github.ref == 'refs/heads/qa'
@@ -181,7 +181,7 @@ jobs:
           echo "::set-env name=SUBNET_IDS::${{ inputs.SUBNET_IDS_QA }}"
           echo "::set-env name=TASK_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_QA_ACCOUNT_ID }}:role/${{ inputs.TASK_ROLE_NAME }}"
           echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_QA_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
-          echo "::set-env name=SUBNET_PREFIX::public"
+          echo "::set-env name=SUBNET_PREFIX::eksctl-qa-lineup-k8s-cluster-cluster/SubnetPublic"
 
       - name: Set PROD environment variables
         if: github.ref == 'refs/heads/prod'
@@ -197,7 +197,7 @@ jobs:
           echo "::set-env name=SUBNET_IDS::${{ inputs.SUBNET_IDS_PROD }}"
           echo "::set-env name=TASK_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID }}:role/${{ inputs.TASK_ROLE_NAME }}"
           echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
-          echo "::set-env name=SUBNET_PREFIX::private"
+          echo "::set-env name=SUBNET_PREFIX::eksctl-prod-lineup-eks-cluster/SubnetPrivate"
 
       - name: 🔑 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -266,11 +266,6 @@ jobs:
       - name: Terraform Validate
         working-directory: terraform
         run: terraform validate
-
-      - name: Show terraform.tfvars
-        run: |
-          echo "===== terraform.tfvars ====="
-          cat ./terraform/terraform.tfvars
 
       - name: Terraform Apply
         working-directory: terraform
