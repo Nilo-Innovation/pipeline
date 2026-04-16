@@ -221,9 +221,9 @@ jobs:
           cat > ./terraform/backend.tf <<EOF
           terraform {
             backend "s3" {
-              bucket  = "TU_BUCKET"
-              key     = "TU_KEY"
-              region  = "us-east-1"
+              bucket  = "${{ env.TFSTATE_BUCKET }}"
+              key     = "${{ env.SERVICE_NAME }}/${{ env.STAGE }}/tfstate.tf"
+              region  = "${{ env.AWS_REGION }}"
               encrypt = true
             }
           }
