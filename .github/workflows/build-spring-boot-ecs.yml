@@ -117,14 +117,26 @@ jobs:
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/prod'
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
+      # - name: 🏗️ Build, Tag, and Push Images to Amazon ECR
+      #   if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod' || github.ref == 'refs/heads/qa'
+      #   env:
+      #     IMAGE_TAG: latest
+      #     REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      #     DOCKER_BUILD_TARGET: ${{ env.DOCKER_BUILD_TARGET }}
+      #     ECR_TARGET: ${{ format('{0}.dkr.ecr.us-east-1.amazonaws.com/{1}-{2}/{3}:latest',env.AWS_ACCOUNT_ID, env.STAGE, env.ORGANIZATION, env.SERVICE_NAME ) }}
+      #   run: |
+      #     docker buildx build --platform linux/amd64 -t $ECR_TARGET --push .
+
       - name: 🏗️ Build, Tag, and Push Images to Amazon ECR
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod' || github.ref == 'refs/heads/qa'
         env:
-          IMAGE_TAG: latest
+          IMAGE_TAG: ${{ github.sha }}
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           DOCKER_BUILD_TARGET: ${{ env.DOCKER_BUILD_TARGET }}
-          ECR_TARGET: ${{ format('{0}.dkr.ecr.us-east-1.amazonaws.com/{1}-{2}/{3}:latest',env.AWS_ACCOUNT_ID, env.STAGE, env.ORGANIZATION, env.SERVICE_NAME ) }}
+          ECR_REPOSITORY: ${{ env.SERVICE_NAME }}-${{ env.STAGE }}
         run: |
+          ECR_TARGET="${REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+          echo "Pushing image to ${ECR_TARGET}"
           docker buildx build --platform linux/amd64 -t $ECR_TARGET --push .
       - name: Checkout code
         uses: actions/checkout@v4
