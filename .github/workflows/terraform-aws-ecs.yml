@@ -23,12 +23,7 @@ on:
       HEALTH_CHECK_PATH:
         required: false
         type: string
-        default: /
-
-      DESIRED_COUNT:
-        required: false
-        type: string
-        default: "1"
+        default: /actuator/health
 
       LOG_RETENTION_IN_DAYS:
         required: false
@@ -161,6 +156,7 @@ jobs:
           echo "::set-env name=TASK_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_DEV_ACCOUNT_ID }}:role/${{ inputs.TASK_ROLE_NAME }}"
           echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_DEV_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
           echo "::set-env name=SUBNET_PREFIX::eksctl-dev-lineup-k8s-cluster-cluster/SubnetPublic"
+          echo "::set-env name=DESIRED_COUNT::1"
 
       - name: Set QA environment variables
         if: github.ref == 'refs/heads/qa'
@@ -177,6 +173,8 @@ jobs:
           echo "::set-env name=TASK_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_QA_ACCOUNT_ID }}:role/${{ inputs.TASK_ROLE_NAME }}"
           echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_QA_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
           echo "::set-env name=SUBNET_PREFIX::eksctl-qa-lineup-k8s-cluster-cluster/SubnetPublic"
+          echo "::set-env name=DESIRED_COUNT::1"
+          
 
       - name: Set PROD environment variables
         if: github.ref == 'refs/heads/prod'
@@ -193,6 +191,7 @@ jobs:
           echo "::set-env name=TASK_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID }}:role/${{ inputs.TASK_ROLE_NAME }}"
           echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
           echo "::set-env name=SUBNET_PREFIX::eksctl-prod-lineup-eks-cluster/SubnetPrivate"
+          echo "::set-env name=DESIRED_COUNT::2"
 
       - name: 🔑 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
