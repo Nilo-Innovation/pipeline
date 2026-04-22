@@ -207,7 +207,6 @@ jobs:
 
       - name: Download file from S3 & Set up Variables
         run: |
-          aws s3 ls
           aws s3 sync s3://lineup-terraform-${{ env.STAGE }}/ecs/ ./terraform
 
           cat > ./terraform/backend.tf <<EOF
@@ -267,7 +266,7 @@ jobs:
 
       - name: Terraform Apply
         working-directory: terraform
-        run: terraform apply -auto-approve
+        run: terraform destroy -auto-approve
 
       - name: Notify Slack on Failure
         if: failure()
