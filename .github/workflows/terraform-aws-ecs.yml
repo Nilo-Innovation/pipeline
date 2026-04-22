@@ -23,7 +23,7 @@ on:
       HEALTH_CHECK_PATH:
         required: false
         type: string
-        default: /health
+        default: health
 
       LOG_RETENTION_IN_DAYS:
         required: false
