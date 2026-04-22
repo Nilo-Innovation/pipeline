@@ -23,7 +23,7 @@ on:
       HEALTH_CHECK_PATH:
         required: false
         type: string
-        default: /actuator/health
+        default: /health
 
       LOG_RETENTION_IN_DAYS:
         required: false
@@ -266,7 +266,7 @@ jobs:
 
       - name: Terraform Apply
         working-directory: terraform
-        run: terraform destroy -auto-approve
+        run: terraform apply -auto-approve
 
       - name: Notify Slack on Failure
         if: failure()
