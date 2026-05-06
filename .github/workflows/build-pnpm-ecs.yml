@@ -8,15 +8,8 @@ on:
         required: true
         type: string
       PATH_SERVICE:
-        required: true
+        required: false
         type: string
-      DOCKERFILE_PATH:
-        required: true
-        type: string
-      PACKAGE_FILTER:
-        required: true
-        type: string
-
     secrets:
       ALB_DEV:
         required: true
@@ -34,11 +27,20 @@ on:
         required: true
       AWS_PIPELINE_SECRET_ACCESS_KEY:
         required: true
-      SLACK_WEBHOOK_URL:
+      PACKAGE_USERNAME:
+        required: true
+      PACKAGE_TOKEN:
+        required: true
+      NEWRELIC:
+        required: true
+      NEWRELIC_USER_KEY_JAVA:
+        required: true
+      NEW_RELIC_ACCOUNT_ID:
         required: true
 
 env:
   BUILD_SHA: ${{ github.sha }}
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_PIPELINE_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PIPELINE_SECRET_ACCESS_KEY }}
   AWS_REGION: us-east-1
@@ -46,23 +48,21 @@ env:
   AWS_DEFAULT_OUTPUT: json
   AWS_DEPLOYMENT_ROLE: pipeline
   ORGANIZATION: lineup
-  SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
-  SERVICE_PORT: ${{ inputs.SERVICE_PORT }}
-  PATH_SERVICE: ${{ inputs.PATH_SERVICE }}
-  DOCKERFILE_PATH: ${{ inputs.DOCKERFILE_PATH }}
-  PACKAGE_FILTER: ${{ inputs.PACKAGE_FILTER }}
+  SERVICE_NAME: ${{inputs.SERVICE_NAME}}
+  SERVICE_PORT: ${{inputs.SERVICE_PORT}}
+  NEWRELIC: ${{ secrets.NEWRELIC }}
+  NEWRELIC_USER_KEY_JAVA: ${{ secrets.NEWRELIC_USER_KEY_JAVA }}
+  NEW_RELIC_ACCOUNT_ID: ${{ secrets.NEW_RELIC_ACCOUNT_ID }}
 
 jobs:
   build:
-    name: Build PNPM Docker Image
+    name: Build Docker Images
+    #runs-on: [self-hosted, prod]
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Set DEV environment variables
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/feature*' || github.ref == 'refs/heads/hotfix*'
         run: |
@@ -87,82 +87,82 @@ jobs:
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
           echo "::set-env name=ALB::${{ secrets.ALB_PROD }}"
           echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
+      # ==========================================================
+      # CI PNPM
+      # ==========================================================
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
-
       - name: Install dependencies
         run: |
           pnpm install --frozen-lockfile
-
+      - name: Build shared package
+        run: |
+          pnpm --filter @lineup-crm/shared build
       - name: Typecheck
         run: |
           pnpm typecheck
-
-      - name: Run tests
+      - name: Test
         run: |
           pnpm test
-
       - name: Build application
         run: |
           pnpm build
-
-      - name: Configure AWS Credentials
+      - name: 🔑 Configure AWS Credentials
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/prod'
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-          role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID, env.AWS_DEPLOYMENT_ROLE) }}
+          role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
           role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
-
-      - name: Login to Amazon ECR
+      - name: 🔓 Login to Amazon ECR
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/prod'
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
+        uses: aws-actions/amazon-ecr-login@v1
       - name: Set up Docker Buildx
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/prod'
         uses: docker/setup-buildx-action@v3
 
-      - name: Build, tag and push Docker image to Amazon ECR
+      - name: 🏗️ Build, Tag, and Push Image to Amazon ECR
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/prod' || github.ref == 'refs/heads/qa'
         env:
           IMAGE_TAG: ${{ github.sha }}
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          DOCKER_BUILD_TARGET: ${{ env.DOCKER_BUILD_TARGET }}
           ECR_REPOSITORY: ${{ env.SERVICE_NAME }}-${{ env.STAGE }}
         run: |
           ECR_TARGET="${REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
 
-          echo "Building image:"
-          echo "Service: ${SERVICE_NAME}"
-          echo "Dockerfile: ${DOCKERFILE_PATH}"
-          echo "Context: ."
-          echo "Target: ${ECR_TARGET}"
+          echo "Building and pushing image..."
+          echo "Service Name: ${SERVICE_NAME}"
+          echo "Stage: ${STAGE}"
+          echo "Path Service: ${PATH_SERVICE}"
+          echo "Dockerfile: ${PATH_SERVICE}/Dockerfile"
+          echo "ECR Target: ${ECR_TARGET}"
 
           docker buildx build \
             --platform linux/amd64 \
-            -f "${DOCKERFILE_PATH}" \
+            -f "${PATH_SERVICE}/Dockerfile" \
             -t "${ECR_TARGET}" \
             --push \
             .
-
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Notify Slack on Failure
         if: failure()
         run: |
-          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"${{ github.actor }}\", \"text\": \"Workflow Build PNPM Deploy ${{ env.SERVICE_NAME }}-${{ github.ref_name }} failed. See details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
-
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Build Spring Boot Deploy ${{ env.SERVICE_NAME }}-${{ github.ref_name }} failed! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/lineup-${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
       - name: Notify Slack on Success
         if: success()
         run: |
-          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"${{ github.actor }}\", \"text\": \"Workflow Build PNPM Deploy ${{ env.SERVICE_NAME }}-${{ github.ref_name }} succeeded. See details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Build Spring Boot Deploy ${{ env.SERVICE_NAME }}-${{ github.ref_name }} succeeded! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/lineup-${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
