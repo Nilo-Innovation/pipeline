@@ -91,31 +91,35 @@ jobs:
       # CI PNPM
       # ==========================================================
 
-      - name: Install pnpm
+        - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - name: Set up Node.js
+
+        - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-      - name: Install dependencies
+            node-version: 20
+            cache: pnpm
+            cache-dependency-path: pnpm-lock.yaml
+
+        - name: Install dependencies
         run: |
-          pnpm install --frozen-lockfile
-      - name: Build shared package
+            pnpm install --frozen-lockfile
+
+        - name: Build shared package
         run: |
-          pnpm --filter @lineup-crm/shared build
-      - name: Typecheck
+            pnpm --filter @lineup-crm/shared build
+
+        - name: Typecheck
         run: |
-          pnpm typecheck
-      - name: Test
+            pnpm typecheck
+
+        - name: Test
         run: |
-          pnpm test
-      - name: Build application
+            pnpm test
+
+        - name: Build application
         run: |
-          pnpm build
+            pnpm build
       - name: 🔑 Configure AWS Credentials
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/prod'
         uses: aws-actions/configure-aws-credentials@v1
