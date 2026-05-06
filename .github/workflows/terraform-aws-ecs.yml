@@ -207,7 +207,20 @@ jobs:
 
       - name: Download file from S3 & Set up Variables
         run: |
-          aws s3 sync s3://lineup-terraform-${{ env.STAGE }}/ecs/ ./terraform
+          # Default folder
+          TERRAFORM_FOLDER="ecs"
+
+          # Custom folder per service
+          if [ "${{ env.SERVICE_NAME }}" = "crm-web-service" ]; then
+            TERRAFORM_FOLDER="ecs/crm-web"
+          elif [ "${{ env.SERVICE_NAME }}" = "crm-api-service" ]; then
+            TERRAFORM_FOLDER="ecs/crm-api"
+          fi
+
+          echo "SERVICE_NAME=${{ env.SERVICE_NAME }}"
+          echo "Downloading Terraform files from: s3://lineup-terraform-${{ env.STAGE }}/${TERRAFORM_FOLDER}/"
+
+          aws s3 sync s3://lineup-terraform-${{ env.STAGE }}/${TERRAFORM_FOLDER}/ ./terraform
 
           cat > ./terraform/backend.tf <<EOF
           terraform {
