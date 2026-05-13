@@ -213,8 +213,13 @@ jobs:
           # Custom folder per service
           if [ "${{ env.SERVICE_NAME }}" = "crm-web-service" ]; then
             TERRAFORM_FOLDER="ecs/crm-web"
+
           elif [ "${{ env.SERVICE_NAME }}" = "crm-api-service" ]; then
             TERRAFORM_FOLDER="ecs/crm-api"
+
+          elif [ "${{ env.SERVICE_NAME }}" = "crm-ml-service" ]; then
+            TERRAFORM_FOLDER="ecs/crm-ml"
+
           fi
 
           echo "SERVICE_NAME=${{ env.SERVICE_NAME }}"
