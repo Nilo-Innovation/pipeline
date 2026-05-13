@@ -153,13 +153,6 @@ jobs:
           echo "Dockerfile: ${PATH_SERVICE}/Dockerfile"
           echo "ECR Target: ${ECR_TARGET}"
 
-          docker buildx build \
-            --platform linux/amd64 \
-            -f "${PATH_SERVICE}/Dockerfile" \
-            -t "${ECR_TARGET}" \
-            --push \
-            .
-
           if [ "${SERVICE_NAME}" = "crm-web-service" ]; then
             echo "Building WEB service with NEXT_PUBLIC build args..."
 
