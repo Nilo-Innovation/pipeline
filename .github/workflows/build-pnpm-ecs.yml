@@ -80,6 +80,7 @@ jobs:
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_QA_ACCOUNT_ID }}"
           echo "::set-env name=ALB::${{ secrets.ALB_QA }}"
           echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
+          echo "::set-env name=NEXT_PUBLIC_API_URL::https://crm-api-service-qa.lineup.com.mx"
       - name: Set PROD environment variables
         if: github.ref == 'refs/heads/prod'
         run: |
@@ -88,6 +89,7 @@ jobs:
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
           echo "::set-env name=ALB::${{ secrets.ALB_PROD }}"
           echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
+          echo "::set-env name=NEXT_PUBLIC_API_URL::https://crm-api-service.lineup.com.mx"
       # ==========================================================
       # CI PNPM
       # ==========================================================
@@ -140,6 +142,7 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           DOCKER_BUILD_TARGET: ${{ env.DOCKER_BUILD_TARGET }}
           ECR_REPOSITORY: ${{ env.SERVICE_NAME }}-${{ env.STAGE }}
+          NEXT_PUBLIC_API_URL: ${{ env.NEXT_PUBLIC_API_URL }}
         run: |
           ECR_TARGET="${REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
 
@@ -156,6 +159,30 @@ jobs:
             -t "${ECR_TARGET}" \
             --push \
             .
+
+          if [ "${SERVICE_NAME}" = "crm-web-service" ]; then
+            echo "Building WEB service with NEXT_PUBLIC build args..."
+
+            docker buildx build \
+              --platform linux/amd64 \
+              -f "${PATH_SERVICE}/Dockerfile" \
+              -t "${ECR_TARGET}" \
+              --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
+              --build-arg NEXT_PUBLIC_AUDIENCES_2_0="true" \
+              --build-arg NEXT_PUBLIC_INSIGHTS_ENABLED="true" \
+              --build-arg NEXT_PUBLIC_WHATSAPP_ENABLED="true" \
+              --push \
+              .
+          else
+            echo "Building service without WEB build args..."
+
+            docker buildx build \
+              --platform linux/amd64 \
+              -f "${PATH_SERVICE}/Dockerfile" \
+              -t "${ECR_TARGET}" \
+              --push \
+              .
+          fi
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Notify Slack on Failure
