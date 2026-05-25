@@ -164,6 +164,7 @@ jobs:
               --build-arg NEXT_PUBLIC_AUDIENCES_2_0="true" \
               --build-arg NEXT_PUBLIC_INSIGHTS_ENABLED="true" \
               --build-arg NEXT_PUBLIC_WHATSAPP_ENABLED="true" \
+              --build-arg NEXT_PUBLIC_SMS_ENABLED="true" \
               --push \
               .
           else
