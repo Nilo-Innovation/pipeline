@@ -74,7 +74,7 @@ jobs:
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
           echo "::set-env name=ALB::${{ secrets.ALB_DEV }}"
           echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
-      - name: Set PROD environment variables
+      - name: Set QA environment variables
         if: github.ref == 'refs/heads/qa'
         env:
           JAVA_OPTS: "-Xmx300m -Xms250m -XX:MaxMetaspaceSize=200m -XX:MetaspaceSize=130m -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps  -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=1m -Xloggc:/var/log/containers/gc-%t.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/var/log/containers"
