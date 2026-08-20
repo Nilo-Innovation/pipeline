@@ -11,28 +11,12 @@ on:
         required: false
         type: string
     secrets:
-      # ALB_DEV:
-      #   required: true
-      # ALB_QA:
-      #   required: true
       ALB_PROD:
         required: true
-      # AWS_DEV_ACCOUNT_ID:
-      #   required: true
-      # AWS_QA_ACCOUNT_ID:
-      #   required: true
       AWS_PROD_ACCOUNT_ID_CIE:
         required: true
-      PACKAGE_USERNAME:
-        required: true
-      PACKAGE_TOKEN:
-        required: true
-      NEWRELIC:
-        required: true
-      NEWRELIC_USER_KEY_JAVA:
-        required: true
-      NEW_RELIC_ACCOUNT_ID:
-        required: true
+
+
 
 env:
   BUILD_SHA: ${{ github.sha }}
@@ -45,9 +29,6 @@ env:
   SERVICE_NAME: ${{inputs.SERVICE_NAME}}
   SERVICE_PORT: ${{inputs.SERVICE_PORT}}
   PATH_SERVICE: ${{ inputs.PATH_SERVICE }}
-  NEWRELIC: ${{ secrets.NEWRELIC }}
-  NEWRELIC_USER_KEY_JAVA: ${{ secrets.NEWRELIC_USER_KEY_JAVA }}
-  NEW_RELIC_ACCOUNT_ID: ${{ secrets.NEW_RELIC_ACCOUNT_ID }}
 
 jobs:
   build:
@@ -61,23 +42,6 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      # - name: Set DEV environment variables
-      #   if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/feature*' || github.ref == 'refs/heads/hotfix*'
-      #   run: |
-      #     echo "::set-env name=STAGE::dev"
-      #     echo "::set-env name=DOCKER_BUILD_TARGET::debug"
-      #     echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
-      #     echo "::set-env name=ALB::${{ secrets.ALB_DEV }}"
-      #     echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
-      # - name: Set PROD environment variables
-      #   if: github.ref == 'refs/heads/qa'
-      #   run: |
-      #     echo "::set-env name=STAGE::qa"
-      #     echo "::set-env name=DOCKER_BUILD_TARGET::debug"
-      #     echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_QA_ACCOUNT_ID }}"
-      #     echo "::set-env name=ALB::${{ secrets.ALB_QA }}"
-      #     echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
-      #     echo "::set-env name=NEXT_PUBLIC_API_URL::https://crm-api-service-qa.cie.com.mx"
       - name: Set PROD environment variables
         if: github.ref == 'refs/heads/master'
         run: |
@@ -93,35 +57,20 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
+        with: { version: 9 } 
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24            # mismo Node que la imagen
           cache: pnpm
-          cache-dependency-path: app/mailing/pnpm-lock.yaml
+          cache-dependency-path: ${{ inputs.PATH_SERVICE }}/pnpm-lock.yaml
       - name: Install dependencies
-        working-directory: app/mailing
+        working-directory: ${{ inputs.PATH_SERVICE }}
         run: |
           pnpm install --frozen-lockfile
-      - name: Build shared package
-        working-directory: app/mailing
-        run: |
-          pnpm --filter @lineup-crm/shared build
-      - name: Typecheck
-        working-directory: app/mailing
-        run: |
           pnpm typecheck
-      - name: Test
-        working-directory: app/mailing
-        run: |
           pnpm test
-      - name: Build application
-        working-directory: app/mailing
-        run: |
-          pnpm build
       - name: 🔑 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v6.2.3
         with:
@@ -134,19 +83,18 @@ jobs:
       - name: 🔓 Login to Amazon ECR
         if: github.ref == 'refs/heads/master'
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
       - name: Set up Docker Buildx
         if: github.ref == 'refs/heads/master'
         uses: docker/setup-buildx-action@v3
 
       - name: 🏗️ Build, Tag, and Push Image to Amazon ECR
-        if: github.ref == 'refs/heads/qa'
+        if: github.ref == 'refs/heads/master'
         env:
           IMAGE_TAG: ${{ github.sha }}
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           DOCKER_BUILD_TARGET: ${{ env.DOCKER_BUILD_TARGET }}
           ECR_REPOSITORY: ${{ env.SERVICE_NAME }}-${{ env.STAGE }}
-          NEXT_PUBLIC_API_URL: ${{ env.NEXT_PUBLIC_API_URL }}
         run: |
           ECR_TARGET="${REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
 
@@ -157,32 +105,13 @@ jobs:
           echo "Dockerfile: ${PATH_SERVICE}/Dockerfile"
           echo "ECR Target: ${ECR_TARGET}"
 
-          if [ "${SERVICE_NAME}" = "crm-web-service" ]; then
-            echo "Building WEB service with NEXT_PUBLIC build args..."
-
-            docker buildx build \
-              --platform linux/amd64 \
-              -f "${PATH_SERVICE}/Dockerfile" \
-              -t "${ECR_TARGET}" \
-              --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
-              --build-arg NEXT_PUBLIC_AUDIENCES_2_0="true" \
-              --build-arg NEXT_PUBLIC_INSIGHTS_ENABLED="true" \
-              --build-arg NEXT_PUBLIC_WHATSAPP_ENABLED="true" \
-              --build-arg NEXT_PUBLIC_SMS_ENABLED="true" \
-              --push \
-              .
-          else
-            echo "Building service without WEB build args..."
-
-            docker buildx build \
-              --platform linux/amd64 \
-              -f "${PATH_SERVICE}/Dockerfile" \
-              -t "${ECR_TARGET}" \
-              --push \
+          docker buildx build \
+            --platform linux/amd64 \
+            -f "${PATH_SERVICE}/Dockerfile" \
+            -t "${ECR_TARGET}" \
+            --push \
               .
           fi
-      - name: Checkout code
-        uses: actions/checkout@v4
       - name: Notify Slack on Failure
         if: failure()
         run: |
