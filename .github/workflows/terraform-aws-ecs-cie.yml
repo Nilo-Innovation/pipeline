@@ -91,21 +91,21 @@ on:
 #        required: false
 #      VPC_CIDR_QA:
 #        required: false
-      VPC_CIDR_PROD:
+      VPC_CIDR_PROD_CIE:
         required: false
 
 #      VPC_DEV:
 #        required: false
 #      VPC_QA:
 #        required: false
-      VPC_PROD:
+      VPC_PROD_CIE:
         required: false
 
 #      SUBNET_IDS_DEV:
 #        required: false
 #      SUBNET_IDS_QA:
 #        required: false
-      SUBNET_IDS_PROD:
+      SUBNET_IDS_PROD_CIE:
         required: false
 
 env:
