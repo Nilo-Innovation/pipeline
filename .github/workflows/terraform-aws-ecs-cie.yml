@@ -208,9 +208,7 @@ jobs:
         run: |
           # Default folder
           TERRAFORM_FOLDER="ecs"
-
-          fi
-
+          
           echo "SERVICE_NAME=${{ env.SERVICE_NAME }}"
           echo "Downloading Terraform files from: s3://cie-terraform-${{ env.STAGE }}/${TERRAFORM_FOLDER}/"
 
