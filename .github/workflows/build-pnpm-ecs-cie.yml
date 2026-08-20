@@ -94,7 +94,7 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           DOCKER_BUILD_TARGET: ${{ env.DOCKER_BUILD_TARGET }}
-          ECR_REPOSITORY: ${{ env.SERVICE_NAME }}-${{ env.STAGE }}
+          ECR_REPOSITORY: ${{ env.SERVICE_NAME }}
         run: |
           ECR_TARGET="${REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
 

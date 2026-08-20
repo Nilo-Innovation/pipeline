@@ -72,8 +72,8 @@ jobs:
           echo "::set-env name=STAGE::prod"
           echo "::set-env name=DOCKER_BUILD_TARGET::debug"
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID_CIE }}"
-          echo "::set-env name=ECS_TASK_DEFINITION_NAME_API::${{ env.ECS_SERVICE_NAME_API }}-prod"
-          echo "::set-env name=ECS_SERVICE_NAME_API_DEPLOY::${{ env.ECS_SERVICE_NAME_API }}-prod"
+          echo "::set-env name=ECS_TASK_DEFINITION_NAME_API::${{ env.ECS_SERVICE_NAME_API }}"
+          echo "::set-env name=ECS_SERVICE_NAME_API_DEPLOY::${{ env.ECS_SERVICE_NAME_API }}"
           echo "::set-env name=ECS_CLUSTER_NAME::f1-rt-cluster"
 
       - name: 🔑 Configure AWS Credentials
@@ -89,7 +89,7 @@ jobs:
       - name: Get TaskDefinition API
         id: get_current_task_api
         run: |
-          IMAGE_URI="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${SERVICE_NAME}-${STAGE}:${IMAGE_TAG}"
+          IMAGE_URI="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${SERVICE_NAME}:${IMAGE_TAG}"
 
           aws ecs describe-task-definition \
             --task-definition "$ECS_TASK_DEFINITION_NAME_API" \
