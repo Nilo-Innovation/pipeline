@@ -51,6 +51,9 @@ env:
 
 jobs:
   build:
+    permissions:
+      id-token: write
+      contents: read
     name: Build Docker Images
     #runs-on: [self-hosted, prod]
     runs-on: ubuntu-latest

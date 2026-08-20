@@ -36,6 +36,9 @@ env:
 
 jobs:
   DeployECS:
+    permissions:
+      id-token: write
+      contents: read
     name: Deploy ECS
     runs-on: ubuntu-latest
     steps:
