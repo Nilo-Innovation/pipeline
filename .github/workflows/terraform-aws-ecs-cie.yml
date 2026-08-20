@@ -52,10 +52,6 @@ on:
 #        required: true
       AWS_PROD_ACCOUNT_ID_CIE:
         required: true
-      AWS_PIPELINE_ACCESS_KEY_ID_CIE:
-        required: true
-      AWS_PIPELINE_SECRET_ACCESS_KEY_CIE:
-        required: true
       PACKAGE_USERNAME:
         required: true
       PACKAGE_TOKEN:
@@ -115,12 +111,10 @@ on:
 env:
   BUILD_SHA: ${{ github.sha }}
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_PIPELINE_ACCESS_KEY_ID_CIE }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PIPELINE_SECRET_ACCESS_KEY_CIE }}
   AWS_REGION: ${{ inputs.AWS_REGION }}
   ROLE_DURATION_SECONDS: 1200
   AWS_DEFAULT_OUTPUT: json
-  AWS_DEPLOYMENT_ROLE: pipeline
+  AWS_DEPLOYMENT_ROLE: f1-rt-deploy
   ORGANIZATION: cie
   SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
   IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
@@ -138,7 +132,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.terraform == 'true' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -180,7 +174,7 @@ jobs:
           
 
       - name: Set PROD environment variables
-        if: github.ref == 'refs/heads/prod'
+        if: github.ref == 'refs/heads/master'
         run: |
           echo "::set-env name=STAGE::prod"
           echo "::set-env name=DOCKER_BUILD_TARGET::debug"
@@ -198,13 +192,14 @@ jobs:
           echo "::set-env name=ENV_FILE_S3_BUCKET::cie-variables-services-prod"
 
       - name: 🔑 Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v6.2.3
         with:
-          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
           role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID, env.AWS_DEPLOYMENT_ROLE) }}
           role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
+
+      - name: 🔎 Validate AWS Identity
+        run: aws sts get-caller-identity
 
       - name: Download file from S3 & Set up Variables
         run: |
