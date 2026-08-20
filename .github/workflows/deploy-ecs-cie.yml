@@ -71,7 +71,7 @@ jobs:
           echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID_CIE }}"
           echo "::set-env name=ECS_TASK_DEFINITION_NAME_API::${{ env.ECS_SERVICE_NAME_API }}-prod"
           echo "::set-env name=ECS_SERVICE_NAME_API_DEPLOY::${{ env.ECS_SERVICE_NAME_API }}-prod"
-          echo "::set-env name=ECS_CLUSTER_NAME::cie-prod-ecs"
+          echo "::set-env name=ECS_CLUSTER_NAME::f1-rt-cluster"
 
       - name: 🔑 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v6.2.3
