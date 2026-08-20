@@ -1,0 +1,298 @@
+name: Terraform ECS Deploy
+
+on:
+  workflow_call:
+    inputs:
+      SERVICE_NAME:
+        required: true
+        type: string
+
+      PATH_SERVICE:
+        required: false
+        type: string
+
+      IMAGE_TAG:
+        required: false
+        type: string
+        default: latest
+
+      LISTENER_RULE_PRIORITY:
+        required: true
+        type: string
+
+      HEALTH_CHECK_PATH:
+        required: false
+        type: string
+        default: health
+
+      LOG_RETENTION_IN_DAYS:
+        required: false
+        type: string
+        default: "30"
+
+      TASK_ROLE_NAME:
+        required: false
+        type: string
+        default: ecsTaskExecutionRole
+
+      EXECUTION_ROLE_NAME:
+        required: false
+        type: string
+        default: ecsTaskExecutionRole
+
+      AWS_REGION:
+        required: false
+        type: string
+        default: us-east-1
+
+    secrets:
+#      AWS_DEV_ACCOUNT_ID:
+#        required: true
+#      AWS_QA_ACCOUNT_ID:
+#        required: true
+      AWS_PROD_ACCOUNT_ID_CIE:
+        required: true
+      AWS_PIPELINE_ACCESS_KEY_ID_CIE:
+        required: true
+      AWS_PIPELINE_SECRET_ACCESS_KEY_CIE:
+        required: true
+      PACKAGE_USERNAME:
+        required: true
+      PACKAGE_TOKEN:
+        required: true
+      SLACK_WEBHOOK_URL:
+        required: true
+
+#      TFSTATE_BUCKET_DEV:
+#        required: false
+#      TFSTATE_BUCKET_QA:
+#        required: false
+      TFSTATE_BUCKET_PROD_CIE:
+        required: false
+
+#      ECS_CLUSTER_NAME_DEV:
+#        required: false
+#      ECS_CLUSTER_NAME_QA:
+#        required: false
+      ECS_CLUSTER_NAME_PROD_CIE:
+        required: false
+
+#      NAMESPACE_DEV:
+#        required: false
+#      NAMESPACE_QA:
+#        required: false
+      NAMESPACE_PROD_CIE:
+        required: false
+
+#      APPLICATION_LOAD_BALANCER_ARN_DEV:
+#        required: false
+#      APPLICATION_LOAD_BALANCER_ARN_QA:
+#        required: false
+      APPLICATION_LOAD_BALANCER_ARN_PROD_CIE:
+        required: false
+
+#      VPC_CIDR_DEV:
+#        required: false
+#      VPC_CIDR_QA:
+#        required: false
+      VPC_CIDR_PROD:
+        required: false
+
+#      VPC_DEV:
+#        required: false
+#      VPC_QA:
+#        required: false
+      VPC_PROD:
+        required: false
+
+#      SUBNET_IDS_DEV:
+#        required: false
+#      SUBNET_IDS_QA:
+#        required: false
+      SUBNET_IDS_PROD:
+        required: false
+
+env:
+  BUILD_SHA: ${{ github.sha }}
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_PIPELINE_ACCESS_KEY_ID_CIE }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PIPELINE_SECRET_ACCESS_KEY_CIE }}
+  AWS_REGION: ${{ inputs.AWS_REGION }}
+  ROLE_DURATION_SECONDS: 1200
+  AWS_DEFAULT_OUTPUT: json
+  AWS_DEPLOYMENT_ROLE: pipeline
+  ORGANIZATION: cie
+  SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
+  IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
+  LISTENER_RULE_PRIORITY: ${{ inputs.LISTENER_RULE_PRIORITY }}
+  HEALTH_CHECK_PATH: ${{ inputs.HEALTH_CHECK_PATH }}
+  DESIRED_COUNT: ${{ inputs.DESIRED_COUNT }}
+  LISTENER_PATH_PATTERNS: ${{ inputs.LISTENER_PATH_PATTERNS }}
+  LOG_RETENTION_IN_DAYS: ${{ inputs.LOG_RETENTION_IN_DAYS }}
+  TASK_ROLE_NAME: ${{ inputs.TASK_ROLE_NAME }}
+  EXECUTION_ROLE_NAME: ${{ inputs.EXECUTION_ROLE_NAME }}
+
+jobs:
+  terraform:
+    name: Deploy Infraestructure in AWS
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.terraform == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # - name: Set DEV environment variables
+      #   if: github.ref == 'refs/heads/dev'
+      #   run: |
+      #     echo "::set-env name=STAGE::dev"
+      #     echo "::set-env name=DOCKER_BUILD_TARGET::debug"
+      #     echo "::set-env name=TFSTATE_BUCKET::${{ secrets.TFSTATE_BUCKET_DEV }}"
+      #     echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
+      #     echo "::set-env name=ECS_CLUSTER_NAME::${{ secrets.ECS_CLUSTER_NAME_DEV }}"
+      #     echo "::set-env name=NAMESPACE::${{ secrets.NAMESPACE_DEV }}"
+      #     echo "::set-env name=APPLICATION_LOAD_BALANCER_ARN::${{ secrets.APPLICATION_LOAD_BALANCER_ARN_DEV }}"
+      #     echo "::set-env name=VPC_ID::${{ secrets.VPC_DEV }}"
+      #     echo "::set-env name=SUBNET_IDS_CSV::${{ secrets.SUBNET_IDS_DEV }}"
+      #     echo "::set-env name=TASK_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_DEV_ACCOUNT_ID }}:role/${{ inputs.TASK_ROLE_NAME }}"
+      #     echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_DEV_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
+      #     echo "::set-env name=SUBNET_PREFIX::eksctl-dev-cie-k8s-cluster-cluster/SubnetPublic"
+      #     echo "::set-env name=DESIRED_COUNT::1"
+      #     echo "::set-env name=ENV_FILE_S3_BUCKET::cie-variables-services-dev"
+
+      # - name: Set QA environment variables
+      #   if: github.ref == 'refs/heads/qa'
+      #   run: |
+      #     echo "::set-env name=STAGE::qa"
+      #     echo "::set-env name=DOCKER_BUILD_TARGET::debug"
+      #     echo "::set-env name=TFSTATE_BUCKET::${{ secrets.TFSTATE_BUCKET_QA }}"
+      #     echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_QA_ACCOUNT_ID }}"
+      #     echo "::set-env name=ECS_CLUSTER_NAME::${{ secrets.ECS_CLUSTER_NAME_QA }}"
+      #     echo "::set-env name=NAMESPACE::${{ secrets.NAMESPACE_QA }}"
+      #     echo "::set-env name=APPLICATION_LOAD_BALANCER_ARN::${{ secrets.APPLICATION_LOAD_BALANCER_ARN_QA }}"
+      #     echo "::set-env name=VPC_ID::${{ secrets.VPC_QA }}"
+      #     echo "::set-env name=SUBNET_IDS_CSV::${{ secrets.SUBNET_IDS_QA }}"
+      #     echo "::set-env name=TASK_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_QA_ACCOUNT_ID }}:role/${{ inputs.TASK_ROLE_NAME }}"
+      #     echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_QA_ACCOUNT_ID }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
+      #     echo "::set-env name=SUBNET_PREFIX::eksctl-qa-cie-k8s-cluster-cluster/SubnetPublic"
+      #     echo "::set-env name=DESIRED_COUNT::1"
+      #     echo "::set-env name=ENV_FILE_S3_BUCKET::cie-variables-services-qa"
+          
+
+      - name: Set PROD environment variables
+        if: github.ref == 'refs/heads/prod'
+        run: |
+          echo "::set-env name=STAGE::prod"
+          echo "::set-env name=DOCKER_BUILD_TARGET::debug"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID_CIE }}"
+          echo "::set-env name=TFSTATE_BUCKET::${{ secrets.TFSTATE_BUCKET_PROD_CIE }}"
+          echo "::set-env name=ECS_CLUSTER_NAME::${{ secrets.ECS_CLUSTER_NAME_PROD_CIE }}"
+          echo "::set-env name=NAMESPACE::${{ secrets.NAMESPACE_PROD_CIE }}"
+          echo "::set-env name=APPLICATION_LOAD_BALANCER_ARN::${{ secrets.APPLICATION_LOAD_BALANCER_ARN_PROD_CIE }}"
+          echo "::set-env name=VPC_ID::${{ secrets.VPC_PROD_CIE }}"
+          echo "::set-env name=SUBNET_IDS_CSV::${{ secrets.SUBNET_IDS_PROD_CIE }}"
+          echo "::set-env name=TASK_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID_CIE }}:role/${{ inputs.TASK_ROLE_NAME }}"
+          echo "::set-env name=EXECUTION_ROLE_ARN::arn:aws:iam::${{ secrets.AWS_PROD_ACCOUNT_ID_CIE }}:role/${{ inputs.EXECUTION_ROLE_NAME }}"
+          echo "::set-env name=SUBNET_PREFIX::eksctl-prod-cie-eks-cluster/SubnetPrivate"
+          echo "::set-env name=DESIRED_COUNT::2"
+          echo "::set-env name=ENV_FILE_S3_BUCKET::cie-variables-services-prod"
+
+      - name: 🔑 Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID, env.AWS_DEPLOYMENT_ROLE) }}
+          role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
+
+      - name: Download file from S3 & Set up Variables
+        run: |
+          # Default folder
+          TERRAFORM_FOLDER="ecs"
+
+          # Custom folder per service
+          if [ "${{ env.SERVICE_NAME }}" = "crm-web-service" ]; then
+            TERRAFORM_FOLDER="ecs/crm-web"
+
+          elif [ "${{ env.SERVICE_NAME }}" = "crm-api-service" ]; then
+            TERRAFORM_FOLDER="ecs/crm-api"
+
+          elif [ "${{ env.SERVICE_NAME }}" = "crm-ml-service" ]; then
+            TERRAFORM_FOLDER="ecs/crm-ml"
+
+          fi
+
+          echo "SERVICE_NAME=${{ env.SERVICE_NAME }}"
+          echo "Downloading Terraform files from: s3://cie-terraform-${{ env.STAGE }}/${TERRAFORM_FOLDER}/"
+
+          aws s3 sync s3://cie-terraform-${{ env.STAGE }}/${TERRAFORM_FOLDER}/ ./terraform
+
+          cat > ./terraform/backend.tf <<EOF
+          terraform {
+            backend "s3" {
+              bucket  = "${{ env.TFSTATE_BUCKET }}"
+              key     = "${{ env.SERVICE_NAME }}/${{ env.STAGE }}/tfstate.tf"
+              region  = "${{ env.AWS_REGION }}"
+              encrypt = true
+            }
+          }
+          EOF
+
+          sed -i "s|AWS_ACCESS_KEY_ID|${{ env.AWS_ACCESS_KEY_ID }}|g" ./terraform/terraform.tfvars
+          sed -i "s|AWS_SECRET_ACCESS_KEY|${{ env.AWS_SECRET_ACCESS_KEY }}|g" ./terraform/terraform.tfvars
+          sed -i "s|SERVICE_NAME|${{ env.SERVICE_NAME }}|g" ./terraform/terraform.tfvars
+          sed -i "s|ENVIRONMENT|${{ env.STAGE }}|g" ./terraform/terraform.tfvars
+          sed -i "s|AWS_REGION|${{ env.AWS_REGION }}|g" ./terraform/terraform.tfvars
+          sed -i "s|CONTAINER_IMAGE|${{ env.CONTAINER_IMAGE }}|g" ./terraform/terraform.tfvars
+          sed -i "s|ECS_CLUSTER|${{ env.ECS_CLUSTER_NAME }}|g" ./terraform/terraform.tfvars
+          sed -i "s|TASK_ROLE_ARN|${{ env.TASK_ROLE_ARN }}|g" ./terraform/terraform.tfvars
+          sed -i "s|EXECUTION_ROLE_ARN|${{ env.EXECUTION_ROLE_ARN }}|g" ./terraform/terraform.tfvars
+          sed -i "s|NAMESPACE|${{ env.NAMESPACE }}|g" ./terraform/terraform.tfvars
+          sed -i "s|APPLICATION_LOAD_BALANCER_ARN|${{ env.APPLICATION_LOAD_BALANCER_ARN }}|g" ./terraform/terraform.tfvars
+          sed -i "s|LISTENER_RULE_PRIORITY|${{ env.LISTENER_RULE_PRIORITY }}|g" ./terraform/terraform.tfvars
+          sed -i "s|HEALTH_CHECK_PATH|${{ env.HEALTH_CHECK_PATH }}|g" ./terraform/terraform.tfvars
+          sed -i "s|DESIRED_COUNT|${{ env.DESIRED_COUNT }}|g" ./terraform/terraform.tfvars
+          sed -i "s|SUBNET_PREFIX|${{ env.SUBNET_PREFIX }}|g" ./terraform/terraform.tfvars
+          sed -i "s|VPC_ID|${{ env.VPC_ID }}|g" ./terraform/terraform.tfvars
+          sed -i "s|SUBNET_IDS_CSV|${{ env.SUBNET_IDS_CSV }}|g" ./terraform/terraform.tfvars
+          sed -i "s|LISTENER_PATH_PATTERNS|${{ env.LISTENER_PATH_PATTERNS }}|g" ./terraform/terraform.tfvars
+          sed -i "s|LOG_RETENTION_IN_DAYS|${{ env.LOG_RETENTION_IN_DAYS }}|g" ./terraform/terraform.tfvars
+          sed -i "s|ENV_FILE_S3_BUCKET|${{ env.ENV_FILE_S3_BUCKET }}|g" ./terraform/terraform.tfvars
+
+          sed -i "s|SERVICE_NAME|${{ env.SERVICE_NAME }}|g" ./terraform/variables.tf
+
+          echo "================ backend.tf ================"
+          cat ./terraform/backend.tf
+          echo "================ terraform.tfvars ================"
+          cat ./terraform/terraform.tfvars
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.5
+
+      - name: Terraform Version
+        run: terraform version
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: terraform
+        run: terraform validate
+
+      - name: Terraform Apply
+        working-directory: terraform
+        run: terraform apply -auto-approve
+
+      - name: Notify Slack on Failure
+        if: failure()
+        run: |
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Infraestructure Deploy ${{ env.SERVICE_NAME }}-${{ github.ref_name }} failed! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notify Slack on Success
+        if: success()
+        run: |
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Infraestructure Deploy ${{ env.SERVICE_NAME }}-${{ github.ref_name }} succeeded! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}

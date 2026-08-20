@@ -1,0 +1,189 @@
+on:
+  workflow_call:
+    inputs:
+      SERVICE_NAME:
+        required: true
+        type: string
+      SERVICE_PORT:
+        required: true
+        type: string
+      PATH_SERVICE:
+        required: false
+        type: string
+    secrets:
+      # ALB_DEV:
+      #   required: true
+      # ALB_QA:
+      #   required: true
+      ALB_PROD:
+        required: true
+      # AWS_DEV_ACCOUNT_ID:
+      #   required: true
+      # AWS_QA_ACCOUNT_ID:
+      #   required: true
+      AWS_PROD_ACCOUNT_ID_CIE:
+        required: true
+      AWS_PIPELINE_ACCESS_KEY_ID_CIE:
+        required: true
+      AWS_PIPELINE_SECRET_ACCESS_KEY_CIE:
+        required: true
+      PACKAGE_USERNAME:
+        required: true
+      PACKAGE_TOKEN:
+        required: true
+      NEWRELIC:
+        required: true
+      NEWRELIC_USER_KEY_JAVA:
+        required: true
+      NEW_RELIC_ACCOUNT_ID:
+        required: true
+
+env:
+  BUILD_SHA: ${{ github.sha }}
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_PIPELINE_ACCESS_KEY_ID_CIE }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PIPELINE_SECRET_ACCESS_KEY_CIE }}
+  AWS_REGION: us-east-1
+  ROLE_DURATION_SECONDS: 1200
+  AWS_DEFAULT_OUTPUT: json
+  AWS_DEPLOYMENT_ROLE: pipeline
+  ORGANIZATION: cie
+  SERVICE_NAME: ${{inputs.SERVICE_NAME}}
+  SERVICE_PORT: ${{inputs.SERVICE_PORT}}
+  PATH_SERVICE: ${{ inputs.PATH_SERVICE }}
+  NEWRELIC: ${{ secrets.NEWRELIC }}
+  NEWRELIC_USER_KEY_JAVA: ${{ secrets.NEWRELIC_USER_KEY_JAVA }}
+  NEW_RELIC_ACCOUNT_ID: ${{ secrets.NEW_RELIC_ACCOUNT_ID }}
+
+jobs:
+  build:
+    name: Build Docker Images
+    #runs-on: [self-hosted, prod]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # - name: Set DEV environment variables
+      #   if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/feature*' || github.ref == 'refs/heads/hotfix*'
+      #   run: |
+      #     echo "::set-env name=STAGE::dev"
+      #     echo "::set-env name=DOCKER_BUILD_TARGET::debug"
+      #     echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_DEV_ACCOUNT_ID }}"
+      #     echo "::set-env name=ALB::${{ secrets.ALB_DEV }}"
+      #     echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
+      # - name: Set PROD environment variables
+      #   if: github.ref == 'refs/heads/qa'
+      #   run: |
+      #     echo "::set-env name=STAGE::qa"
+      #     echo "::set-env name=DOCKER_BUILD_TARGET::debug"
+      #     echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_QA_ACCOUNT_ID }}"
+      #     echo "::set-env name=ALB::${{ secrets.ALB_QA }}"
+      #     echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
+      #     echo "::set-env name=NEXT_PUBLIC_API_URL::https://crm-api-service-qa.cie.com.mx"
+      - name: Set PROD environment variables
+        if: github.ref == 'refs/heads/master'
+        run: |
+          echo "::set-env name=STAGE::prod"
+          echo "::set-env name=DOCKER_BUILD_TARGET::debug"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID_CIE }}"
+          echo "::set-env name=ALB::${{ secrets.ALB_PROD }}"
+          echo "::set-env name=NEWRELIC::${{ secrets.NEWRELIC }}"
+          echo "::set-env name=NEXT_PUBLIC_API_URL::https://crm-api-service.cie.com.mx"
+      # ==========================================================
+      # CI PNPM
+      # ==========================================================
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install dependencies
+        run: |
+          pnpm install --frozen-lockfile
+      - name: Build shared package
+        run: |
+          pnpm --filter @lineup-crm/shared build
+      - name: Typecheck
+        run: |
+          pnpm typecheck
+      - name: Test
+        run: |
+          pnpm test
+      - name: Build application
+        run: |
+          pnpm build
+      - name: 🔑 Configure AWS Credentials
+        if: github.ref == 'refs/heads/master'
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID,env.AWS_DEPLOYMENT_ROLE) }}
+          role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
+      - name: 🔓 Login to Amazon ECR
+        if: github.ref == 'refs/heads/master'
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Set up Docker Buildx
+        if: github.ref == 'refs/heads/master'
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🏗️ Build, Tag, and Push Image to Amazon ECR
+        if: github.ref == 'refs/heads/qa'
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          DOCKER_BUILD_TARGET: ${{ env.DOCKER_BUILD_TARGET }}
+          ECR_REPOSITORY: ${{ env.SERVICE_NAME }}-${{ env.STAGE }}
+          NEXT_PUBLIC_API_URL: ${{ env.NEXT_PUBLIC_API_URL }}
+        run: |
+          ECR_TARGET="${REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+
+          echo "Building and pushing image..."
+          echo "Service Name: ${SERVICE_NAME}"
+          echo "Stage: ${STAGE}"
+          echo "Path Service: ${PATH_SERVICE}"
+          echo "Dockerfile: ${PATH_SERVICE}/Dockerfile"
+          echo "ECR Target: ${ECR_TARGET}"
+
+          if [ "${SERVICE_NAME}" = "crm-web-service" ]; then
+            echo "Building WEB service with NEXT_PUBLIC build args..."
+
+            docker buildx build \
+              --platform linux/amd64 \
+              -f "${PATH_SERVICE}/Dockerfile" \
+              -t "${ECR_TARGET}" \
+              --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
+              --build-arg NEXT_PUBLIC_AUDIENCES_2_0="true" \
+              --build-arg NEXT_PUBLIC_INSIGHTS_ENABLED="true" \
+              --build-arg NEXT_PUBLIC_WHATSAPP_ENABLED="true" \
+              --build-arg NEXT_PUBLIC_SMS_ENABLED="true" \
+              --push \
+              .
+          else
+            echo "Building service without WEB build args..."
+
+            docker buildx build \
+              --platform linux/amd64 \
+              -f "${PATH_SERVICE}/Dockerfile" \
+              -t "${ECR_TARGET}" \
+              --push \
+              .
+          fi
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Notify Slack on Failure
+        if: failure()
+        run: |
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Build Spring Boot Deploy ${{ env.SERVICE_NAME }}-${{ github.ref_name }} failed! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Notify Slack on Success
+        if: success()
+        run: |
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Workflow Build Spring Boot Deploy ${{ env.SERVICE_NAME }}-${{ github.ref_name }} succeeded! See details: '${{ github.workflow }} - https://github.com/Nilo-Innovation/${{ env.SERVICE_NAME }}/actions'.\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
