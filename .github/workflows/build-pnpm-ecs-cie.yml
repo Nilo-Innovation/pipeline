@@ -105,6 +105,11 @@ jobs:
           echo "Dockerfile: ${PATH_SERVICE}/Dockerfile"
           echo "ECR Target: ${ECR_TARGET}"
 
+          if aws ecr describe-images --repository-name "${{ inputs.ECR_REPOSITORY }}" \
+               --image-ids imageTag="${{ github.sha }}" >/dev/null 2>&1; then
+            echo "imagen ya existe (re-run) — saltando push"; exit 0
+          fi
+
           docker buildx build \
             --platform linux/amd64 \
             -f "${PATH_SERVICE}/Dockerfile" \
