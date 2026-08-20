@@ -98,18 +98,23 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       - name: Install dependencies
+        working-directory: app/mailing
         run: |
           pnpm install --frozen-lockfile
       - name: Build shared package
+        working-directory: app/mailing
         run: |
           pnpm --filter @lineup-crm/shared build
       - name: Typecheck
+        working-directory: app/mailing
         run: |
           pnpm typecheck
       - name: Test
+        working-directory: app/mailing
         run: |
           pnpm test
       - name: Build application
+        working-directory: app/mailing
         run: |
           pnpm build
       - name: 🔑 Configure AWS Credentials
