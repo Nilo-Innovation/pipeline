@@ -110,7 +110,7 @@ jobs:
             -f "${PATH_SERVICE}/Dockerfile" \
             -t "${ECR_TARGET}" \
             --push \
-              .
+              "${PATH_SERVICE}"
           fi
       - name: Notify Slack on Failure
         if: failure()
