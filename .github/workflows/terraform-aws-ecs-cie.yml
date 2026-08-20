@@ -208,7 +208,7 @@ jobs:
         run: |
           # Default folder
           TERRAFORM_FOLDER="ecs"
-          
+
           fi
 
           echo "SERVICE_NAME=${{ env.SERVICE_NAME }}"
