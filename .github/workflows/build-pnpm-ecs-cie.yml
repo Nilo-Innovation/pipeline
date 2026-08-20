@@ -111,7 +111,6 @@ jobs:
             -t "${ECR_TARGET}" \
             --push \
               "${PATH_SERVICE}"
-          fi
       - name: Notify Slack on Failure
         if: failure()
         run: |
