@@ -208,7 +208,7 @@ jobs:
         run: |
           # Default folder
           TERRAFORM_FOLDER="ecs"
-          
+
           echo "SERVICE_NAME=${{ env.SERVICE_NAME }}"
           echo "Downloading Terraform files from: s3://cie-terraform-${{ env.STAGE }}/${TERRAFORM_FOLDER}/"
 
@@ -271,7 +271,7 @@ jobs:
 
       - name: Terraform Apply
         working-directory: terraform
-        run: terraform apply -auto-approve
+        run: terraform destroy -auto-approve
 
       - name: Notify Slack on Failure
         if: failure()
