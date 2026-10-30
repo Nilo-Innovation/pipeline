@@ -13,19 +13,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: SCA - Snyk (dependencias vulnerables)
+      - name: "SCA - Snyk test (bloqueante, rompe el job si hay vulnerabilidades)"
         uses: snyk/actions/gradle-jdk11@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          ##args: --severity-threshold=high
+          command: test
+          args: --severity-threshold=high
+
+      - name: SCA - Snyk monitor (snapshot en app.snyk.io, no bloquea)
+        if: always()
+        uses: snyk/actions/gradle-jdk11@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
           command: monitor
 
       - name: SAST - Instalar Snyk CLI
+        if: always()
         uses: snyk/actions/setup@master
 
-      - name: SAST - Snyk Code (analisis estatico, resultados en app.snyk.io)
+      - name: SAST - Snyk Code (bloqueante, resultados en app.snyk.io)
+        if: always()
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: snyk code test --report
-        continue-on-error: true
+        run: snyk code test --report --severity-threshold=high
