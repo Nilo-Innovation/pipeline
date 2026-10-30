@@ -10,8 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write
-      actions: read
     steps:
       - uses: actions/checkout@v4
 
@@ -26,16 +24,8 @@ jobs:
       - name: SAST - Instalar Snyk CLI
         uses: snyk/actions/setup@master
 
-      - name: SAST - Snyk Code (analisis estatico)
+      - name: SAST - Snyk Code (analisis estatico, resultados en app.snyk.io)
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: snyk code test --sarif-file-output=snyk-code.sarif
+        run: snyk code test --report
         continue-on-error: true
-
-      - name: SAST - Subir resultados a la pestaña Security de GitHub
-        if: always()
-        continue-on-error: true
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: snyk-code.sarif
-
