@@ -1,0 +1,37 @@
+on:
+  workflow_call:
+    inputs:
+      SERVICE_NAME:
+        required: true
+        type: string
+
+env:
+  BUILD_SHA: ${{ github.sha }}
+
+jobs:
+  sonarqube:
+    name: SonarQube
+    runs-on: ubuntu-latest
+    # No debe tumbar el pipeline: si falta SONAR_TOKEN/SONAR_HOST_URL o hay
+    # cache miss, este job reporta su propio fallo pero build/deploy siguen.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache Restore (build de Gradle del job 'build')
+        uses: actions/cache/restore@v3
+        with:
+          # Misma llave que build-spring-boot-ecs.yml usa para GUARDAR
+          # (env.SERVICE_NAME, ej. "identity-service") -- NO
+          # github.event.repository.name (ej. "lineup-identity-service"):
+          # son distintos, y con el nombre del repo nunca hace match.
+          path: ${{ inputs.SERVICE_NAME }}/build
+          key: ${{ runner.os }}-gradlew-${{ inputs.SERVICE_NAME }}-${{ github.sha }}
+
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
