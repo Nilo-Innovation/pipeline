@@ -8,12 +8,31 @@ env:
 jobs:
   security:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
-      - uses: actions/checkout@master
-      - name: Run Snyk to check for vulnerabilities
+      - uses: actions/checkout@v4
+
+      - name: SCA - Snyk (dependencias vulnerables)
         uses: snyk/actions/gradle-jdk11@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           ##args: --severity-threshold=high
           command: monitor
+
+      - name: SAST - Instalar Snyk CLI
+        uses: snyk/actions/setup@master
+
+      - name: SAST - Snyk Code (analisis estatico)
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk code test --sarif-file-output=snyk-code.sarif
+        continue-on-error: true
+
+      - name: SAST - Subir resultados a la pestaña Security de GitHub
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk-code.sarif
