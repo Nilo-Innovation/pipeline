@@ -13,21 +13,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: "SCA - Snyk test (bloqueante, rompe el job si hay vulnerabilidades)"
+      - name: "SCA - Snyk test (bloqueante, rompe el job si hay vulnerabilidades, todos los sub-proyectos)"
         uses: snyk/actions/gradle-jdk11@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: test
-          args: --severity-threshold=high
+          args: --all-sub-projects --severity-threshold=high
 
-      - name: SCA - Snyk monitor (snapshot en app.snyk.io, no bloquea)
+      - name: SCA - Snyk monitor (snapshot en app.snyk.io, no bloquea, todos los sub-proyectos)
         if: always()
         uses: snyk/actions/gradle-jdk11@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: monitor
+          args: --all-sub-projects
 
       - name: SAST - Instalar Snyk CLI
         if: always()
@@ -38,4 +39,3 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk code test --report --project-name="${{ github.event.repository.name }}" --severity-threshold=high
-
