@@ -37,4 +37,5 @@ jobs:
         if: always()
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: snyk code test --report --severity-threshold=high
+        run: snyk code test --report --project-name="${{ github.event.repository.name }}" --severity-threshold=high
+
