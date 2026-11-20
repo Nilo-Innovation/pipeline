@@ -220,6 +220,9 @@ jobs:
           elif [ "${{ env.SERVICE_NAME }}" = "crm-ml-service" ]; then
             TERRAFORM_FOLDER="ecs/crm-ml"
 
+          elif [ "${{ env.SERVICE_NAME }}" = "web-loms" ]; then
+            TERRAFORM_FOLDER="ecs/web-loms"
+
           fi
 
           echo "SERVICE_NAME=${{ env.SERVICE_NAME }}"

@@ -1,0 +1,107 @@
+name: Build Yarn ECS
+
+# Equivalente de build-pnpm-ecs.yml para fronts de Next.js con Yarn (lineup-web-loms).
+# El Dockerfile del repo compila la app; aquí solo se construye y se sube la imagen a ECR.
+# Solo prod: en cualquier otra rama la imagen se construye pero no se sube.
+
+on:
+  workflow_call:
+    inputs:
+      SERVICE_NAME:
+        required: true
+        type: string
+      SERVICE_PORT:
+        required: true
+        type: string
+      PATH_SERVICE:
+        required: false
+        type: string
+        default: .
+      NEXT_PUBLIC_API_BASE_URL_PROD:
+        required: false
+        type: string
+    secrets:
+      AWS_PROD_ACCOUNT_ID:
+        required: true
+      AWS_PIPELINE_ACCESS_KEY_ID:
+        required: true
+      AWS_PIPELINE_SECRET_ACCESS_KEY:
+        required: true
+      SLACK_WEBHOOK_URL:
+        required: false
+
+env:
+  BUILD_SHA: ${{ github.sha }}
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_PIPELINE_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PIPELINE_SECRET_ACCESS_KEY }}
+  AWS_REGION: us-east-1
+  ROLE_DURATION_SECONDS: 1200
+  AWS_DEFAULT_OUTPUT: json
+  AWS_DEPLOYMENT_ROLE: pipeline
+  ORGANIZATION: lineup
+  SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
+  SERVICE_PORT: ${{ inputs.SERVICE_PORT }}
+  PATH_SERVICE: ${{ inputs.PATH_SERVICE }}
+
+jobs:
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set PROD environment variables
+        if: github.ref == 'refs/heads/prod'
+        run: |
+          echo "::set-env name=STAGE::prod"
+          echo "::set-env name=AWS_ACCOUNT_ID::${{ secrets.AWS_PROD_ACCOUNT_ID }}"
+          echo "::set-env name=NEXT_PUBLIC_API_BASE_URL::${{ inputs.NEXT_PUBLIC_API_BASE_URL_PROD }}"
+      - name: 🔑 Configure AWS Credentials
+        if: github.ref == 'refs/heads/prod'
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_ACCOUNT_ID, env.AWS_DEPLOYMENT_ROLE) }}
+          role-duration-seconds: ${{ env.ROLE_DURATION_SECONDS }}
+      - name: 🔓 Login to Amazon ECR
+        if: github.ref == 'refs/heads/prod'
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: 🏗️ Build (y push a ECR en prod)
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          PUSH="--load"
+          TARGET="${SERVICE_NAME}:${IMAGE_TAG}"
+          if [ -n "${REGISTRY}" ] && [ -n "${STAGE}" ]; then
+            PUSH="--push"
+            TARGET="${REGISTRY}/${SERVICE_NAME}-${STAGE}:${IMAGE_TAG}"
+          fi
+          echo "Service: ${SERVICE_NAME}  Stage: ${STAGE:-ninguno (solo build)}  Target: ${TARGET}"
+          echo "NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}"
+          docker buildx build \
+            --platform linux/amd64 \
+            -f "${PATH_SERVICE}/Dockerfile" \
+            -t "${TARGET}" \
+            --build-arg NEXT_PUBLIC_API_BASE_URL="${NEXT_PUBLIC_API_BASE_URL}" \
+            ${PUSH} \
+            "${PATH_SERVICE}"
+      - name: Notify Slack on Failure
+        if: failure()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Build ${{ env.SERVICE_NAME }}-${{ github.ref_name }} failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" "${SLACK_WEBHOOK_URL}" || true
+      - name: Notify Slack on Success
+        if: success()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST --data-urlencode "payload={\"channel\": \"#pipeline-notifications\", \"username\": \"'${{ github.actor }}'\", \"text\": \"Build ${{ env.SERVICE_NAME }}-${{ github.ref_name }} succeeded: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" "${SLACK_WEBHOOK_URL}" || true
